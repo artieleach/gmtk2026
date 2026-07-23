@@ -1,0 +1,62 @@
+class_name Tuning
+
+
+const FACES := 6
+const COLS_PER_FACE := 5
+const COLS := COLS_PER_FACE * FACES
+const ROWS_PER_SEGMENT := 20
+const SEGMENT_COUNT := 8
+const ROWS := ROWS_PER_SEGMENT * SEGMENT_COUNT
+
+const RADIUS := 480.0
+const TILE_W := RADIUS / COLS_PER_FACE
+const TILE_H := 96.0
+const ROTATE_SECONDS := 0.22
+const CAMERA_FOLLOW_SPEED := 8.0
+
+const DAWN_TURNS := 200
+const SUN_ELEV_START_DEG := -3.0
+const SUN_ELEV_END_DEG := 40.0
+const SUN_RISE_EASING := 2.0
+const SUN_RAKE_DEG := 68.0
+const FRONT_ROW_AT_SUNRISE := 31.0
+const HORIZON_DISTANCE_TILES := 640.0
+const MAX_SHADOW_CELLS := 48
+
+const MAX_HP := 10
+const BURN_PER_TURN := 1
+const REGEN_PER_TURN := 1
+const HEAL_IN_SHADE := true
+
+const ENEMY_ACTIVE_ROWS := 24
+const PLAYER_DAMAGE := 2
+const NEST_LEASH := 3
+const NEST_SWARMLINGS := 4
+const NEST_SPAWN_PERIOD := 4
+const NEST_EVERY_N_SEGMENTS := 4
+const ENEMY_FREE_TOP_ROWS := 6
+const PATROL_LEASH := 5
+const MASON_MIN_DEPTH := 1
+
+const LANTERN_RADIUS := 2.0
+const LANTERN_HEIGHT := 0.6
+const MAX_LANTERN_CELLS := 12
+const MAX_VISIBLE_LANTERNS := 4
+
+const UPGRADE_PRICE := 2
+const ALTARS_PER_SEGMENT := 1
+const ALTAR_OFFERS := 3
+const GRACE_CAP := 2
+
+const JUMP_RANGE := 4
+const SHADE_DEPTH := 2
+const TERROR_RADIUS := 6
+const TERROR_TURNS := 5
+
+const ROOM_W := COLS_PER_FACE
+const ROOM_H := 10
+
+const RUIN_CHANCE_TOP := 0.02
+const RUIN_CHANCE_BOTTOM := 0.15
+
+const DEFAULT_SEED := 20260722
