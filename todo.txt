@@ -1,0 +1,1 @@
+windows look weird, should they always be in shadow?

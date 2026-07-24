@@ -34,16 +34,6 @@ const WINDOW_TEXTURE_PATHS := {
 	},
 }
 
-const BRICK_PATHS: Array[String] = [
-	"res://assets/Brick1.png",
-	"res://assets/Brick2.png",
-	"res://assets/Brick3.png",
-	"res://assets/Brick4.png",
-]
-const BRICK_ART_VALUE := 0.54
-const BRICK_RELIEF := 1.12
-const BRICK_WALL_SHARE := 0.25
-
 const LEVEL_PATHS: Array[String] = [
 	"res://assets/level1.png",
 	"res://assets/level2.png",
@@ -64,7 +54,6 @@ var _bars_texture: ImageTexture
 var _bars_image: Image
 var _light_rects: Array[ColorRect] = []
 var _window_textures: Dictionary = {}
-var _brick_textures: Array[Texture2D] = []
 var _level_textures: Array[Texture2D] = []
 var _level_rows: int = 0
 
@@ -76,8 +65,6 @@ func _ready() -> void:
 			"open": load(paths["open"]),
 			"closed": load(paths["closed"]),
 		}
-	for path in BRICK_PATHS:
-		_brick_textures.append(load(path))
 	for path in LEVEL_PATHS:
 		_level_textures.append(load(path))
 	if not _level_textures.is_empty():
@@ -173,6 +160,10 @@ func origin() -> Vector2:
 
 func camera_row() -> float:
 	return _camera_row
+
+
+func sun_turn() -> float:
+	return _sun_turn
 
 
 func cell_rect(pos: Vector2i) -> Rect2:
@@ -335,7 +326,6 @@ func _draw_face(face: int, base: Vector2, first_row: int, last_row: int) -> void
 				Tuning.TILE_H - TILE_GAP)
 			draw_rect(tile, colour)
 			_draw_level(cell, pos, tile, colour)
-			_draw_brick(cell, pos, tile, colour)
 
 
 func _draw_level(cell: Cell, pos: Vector2i, tile: Rect2, tile_colour: Color) -> void:
@@ -352,24 +342,6 @@ func _draw_level(cell: Cell, pos: Vector2i, tile: Rect2, tile_colour: Color) -> 
 	var colour := tile_colour / LEVEL_ART_VALUE
 	colour.a = LEVEL_STRENGTH
 	draw_texture_rect_region(tex, tile, region, colour)
-
-
-func _draw_brick(cell: Cell, pos: Vector2i, tile: Rect2, tile_colour: Color) -> void:
-	if _brick_textures.is_empty() or cell.blocked:
-		return
-	if cell.kind != Cell.Kind.WALL and cell.kind != Cell.Kind.BRICK:
-		return
-	var roll := _cell_hash(pos)
-	if cell.kind == Cell.Kind.WALL and roll % 100 >= int(BRICK_WALL_SHARE * 100.0):
-		return
-	var colour := tile_colour * (BRICK_RELIEF / BRICK_ART_VALUE)
-	colour.a = 1.0
-	draw_texture_rect(_brick_textures[(roll / 100) % _brick_textures.size()],
-		tile, false, colour)
-
-
-func _cell_hash(pos: Vector2i) -> int:
-	return absi(hash(pos))
 
 
 func _tile_colour(cell: Cell) -> Color:

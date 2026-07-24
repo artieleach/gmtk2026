@@ -1,25 +1,35 @@
 class_name BackdropView extends Node2D
 
 
+const BASE := Color(0.718, 0.114, 0.094)
+
+const TOP_ANCHOR := 0.0
+
 const LAYERS: Array[Dictionary] = [
-	{"path": "", "factor": 0.06, "tint": Color(0.08, 0.08, 0.15), "horizon": 0.22},
-	{"path": "", "factor": 0.13, "tint": Color(0.11, 0.11, 0.19), "horizon": 0.44},
-	{"path": "", "factor": 0.24, "tint": Color(0.14, 0.13, 0.23), "horizon": 0.63},
-	{"path": "", "factor": 0.40, "tint": Color(0.17, 0.16, 0.27), "horizon": 0.81},
+	{"path": "res://assets/parralax/1Towers.png", "factor": 0.05, "head": 0.12798,
+		"night": Color(0.30, 0.30, 0.42)},
+	{"path": "res://assets/parralax/2Castle.png", "factor": 0.11, "head": 0.28963,
+		"night": Color(0.36, 0.34, 0.44)},
+	{"path": "res://assets/parralax/3Caths.png", "factor": 0.18, "head": 0.24326,
+		"night": Color(0.42, 0.38, 0.46)},
+	{"path": "res://assets/parralax/4town.png", "factor": 0.26, "head": 0.64850,
+		"night": Color(0.50, 0.44, 0.50)},
 ]
-const PLACEHOLDER_BAND := 0.16
-const PLACEHOLDER_PERIOD := 1.0
 
 var tower_view: TowerView
 
 var _textures: Array[Texture2D] = []
+var _floors: Array[Color] = []
 
 
 func _ready() -> void:
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	for layer in LAYERS:
-		var path: String = layer["path"]
-		_textures.append(load(path) if not path.is_empty() else null)
+		var tex: Texture2D = load(layer["path"])
+		_textures.append(tex)
+		var image := tex.get_image()
+		_floors.append(image.get_pixel(0, image.get_height() - 1))
 
 
 func _process(_delta: float) -> void:
@@ -28,35 +38,39 @@ func _process(_delta: float) -> void:
 
 func _draw() -> void:
 	var view := get_viewport_rect().size
-	draw_rect(Rect2(Vector2.ZERO, view), TowerView.SKY)
+	var dawn := _dawn()
+	draw_rect(Rect2(Vector2.ZERO, view), TowerView.SKY.lerp(BASE, dawn))
 	if tower_view == null:
 		return
 	for i in LAYERS.size():
-		_draw_layer(i, view)
+		_draw_layer(i, view, dawn)
 
 
-func _layer_offset(factor: float) -> Vector2:
-	return Vector2(
-		tower_view.proj.yaw * tower_view.proj.apothem(),
-		-tower_view.camera_row() * Tuning.TILE_H) * factor
+func _dawn() -> float:
+	if tower_view == null or tower_view.game == null:
+		return 0.0
+	var progress := tower_view.game.sun.progress(tower_view.sun_turn())
+	return pow(progress, Tuning.SUN_RISE_EASING)
 
 
-func _draw_layer(index: int, view: Vector2) -> void:
+func _draw_layer(index: int, view: Vector2, dawn: float) -> void:
 	var layer: Dictionary = LAYERS[index]
-	var offset := _layer_offset(layer["factor"])
 	var tex: Texture2D = _textures[index]
-	if tex == null:
-		_draw_placeholder(layer, offset, view)
-		return
-	var size := tex.get_size()
-	var start := Vector2(fposmod(offset.x, size.x), fposmod(offset.y, size.y)) - size
-	draw_texture_rect(tex, Rect2(start, view - start + size), true)
-
-
-func _draw_placeholder(layer: Dictionary, offset: Vector2, view: Vector2) -> void:
-	var period := view.y * PLACEHOLDER_PERIOD
-	var top := fposmod(float(layer["horizon"]) * view.y + offset.y, period) - period
-	var height := view.y * PLACEHOLDER_BAND
-	while top < view.y:
-		draw_rect(Rect2(0.0, top, view.x, height), layer["tint"])
-		top += period
+	var apothem := tower_view.proj.apothem()
+	var width := TAU * apothem
+	var height := width * float(tex.get_height()) / float(tex.get_width())
+	var top := TOP_ANCHOR + float(layer["head"]) * width \
+		- tower_view.camera_row() * Tuning.TILE_H * float(layer["factor"])
+	var left := fposmod(tower_view.proj.yaw * apothem, width) - width
+	var copies := ceilf((view.x - left) / width)
+	var night: Color = layer["night"]
+	var modulate := night.lerp(Color.WHITE, dawn)
+	draw_texture_rect_region(tex,
+		Rect2(left, top, width * copies, height),
+		Rect2(0.0, 0.0, float(tex.get_width()) * copies, float(tex.get_height())),
+		modulate)
+	var floor_top := top + height
+	if floor_top < view.y:
+		var floor_colour: Color = _floors[index]
+		draw_rect(Rect2(0.0, floor_top, view.x, view.y - floor_top),
+			floor_colour * modulate)
