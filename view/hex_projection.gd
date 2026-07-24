@@ -43,9 +43,5 @@ func column_center_x(col: int) -> float:
 	return apothem() * sin(theta) + u * radius * cos(theta)
 
 
-func protrusion_offset_x(face: int, depth: float) -> float:
-	return depth * Tuning.TILE_W * sin(face_angle(face))
-
-
 static func yaw_for_face(face: int) -> float:
 	return -float(face) * FACE_ARC

@@ -7,31 +7,72 @@ const WIDTH := Tuning.ROOM_W
 const HEIGHT := Tuning.ROOM_H
 
 const LEGEND := {
-	".": {"kind": -1, "depth": 0, "anchor": ""},
-	",": {"kind": -1, "depth": 0, "anchor": "creature"},
-	"A": {"kind": -1, "depth": 0, "anchor": "altar"},
-	"W": {"kind": Cell.Kind.WINDOW, "depth": 1, "anchor": ""},
-	"w": {"kind": Cell.Kind.WINDOW, "depth": 1, "anchor": "creature"},
-	"L": {"kind": Cell.Kind.LEDGE, "depth": 1, "anchor": ""},
-	"l": {"kind": Cell.Kind.LEDGE, "depth": 1, "anchor": "creature"},
-	"E": {"kind": Cell.Kind.LEDGE, "depth": 2, "anchor": ""},
-	"e": {"kind": Cell.Kind.LEDGE, "depth": 2, "anchor": "creature"},
-	"C": {"kind": Cell.Kind.CORNICE, "depth": 3, "anchor": ""},
-	"c": {"kind": Cell.Kind.CORNICE, "depth": 3, "anchor": "creature"},
+	".": {"kind": -1, "bars": 0, "anchor": ""},
+	",": {"kind": -1, "bars": 0, "anchor": "creature"},
+	"A": {"kind": -1, "bars": 0, "anchor": "altar"},
+	"T": {"kind": Cell.Kind.WINDOW, "bars": Cell.BAR_TOP, "anchor": ""},
+	"t": {"kind": Cell.Kind.WINDOW, "bars": Cell.BAR_TOP, "anchor": "creature"},
+	"U": {"kind": Cell.Kind.WINDOW, "bars": Cell.BAR_TOP, "anchor": ""},
+	"u": {"kind": Cell.Kind.WINDOW, "bars": Cell.BAR_TOP, "anchor": "creature"},
+	"G": {"kind": Cell.Kind.WINDOW, "bars": Cell.BAR_TOP, "anchor": ""},
+	"L": {"kind": Cell.Kind.LEDGE, "bars": Cell.BAR_TOP, "anchor": ""},
+	"l": {"kind": Cell.Kind.LEDGE, "bars": Cell.BAR_TOP, "anchor": "creature"},
+	"S": {"kind": Cell.Kind.LEDGE, "bars": Cell.BAR_BOTTOM, "anchor": ""},
+	"s": {"kind": Cell.Kind.LEDGE, "bars": Cell.BAR_BOTTOM, "anchor": "creature"},
+	"I": {"kind": Cell.Kind.PILASTER, "bars": Cell.BAR_LEFT, "anchor": ""},
+	"i": {"kind": Cell.Kind.PILASTER, "bars": Cell.BAR_LEFT, "anchor": "creature"},
+	"J": {"kind": Cell.Kind.PILASTER, "bars": Cell.BAR_RIGHT, "anchor": ""},
+	"j": {"kind": Cell.Kind.PILASTER, "bars": Cell.BAR_RIGHT, "anchor": "creature"},
 }
+
+const WINDOW_GLYPHS := {
+	"T": Vector2i(1, 2),
+	"t": Vector2i(1, 2),
+	"U": Vector2i(1, 2),
+	"u": Vector2i(1, 2),
+	"G": Vector2i(3, 5),
+}
+
+
+static func window_size(symbol: String) -> Vector2i:
+	return WINDOW_GLYPHS.get(symbol, Vector2i.ZERO)
+
+
+static func glyph_at(rows: Array, x: int, y: int) -> String:
+	if y < 0 or y >= rows.size():
+		return ""
+	var row: String = rows[y]
+	if x < 0 or x >= row.length():
+		return ""
+	return row[x]
+
+
+static func bars_at(rows: Array, x: int, y: int) -> int:
+	var glyph := glyph_at(rows, x, y)
+	var spec := cell_for(glyph)
+	if spec["kind"] != Cell.Kind.WINDOW:
+		return spec["bars"]
+	return 0 if glyph_at(rows, x, y - 1) == glyph else spec["bars"]
+
+
+static func is_window_origin(rows: Array, x: int, y: int) -> bool:
+	var glyph := glyph_at(rows, x, y)
+	if window_size(glyph) == Vector2i.ZERO:
+		return false
+	return glyph_at(rows, x, y - 1) != glyph and glyph_at(rows, x - 1, y) != glyph
 
 
 const UPPER: Array = [
 	[
 		".....",
-		".WWW.",
+		".TUT.",
+		".TUT.",
+		".SSS.",
 		".....",
-		".L.L.",
 		".....",
-		"..w..",
-		".....",
-		".EEE.",
-		".....",
+		"..t..",
+		"..t..",
+		"..S..",
 		".....",
 	],
 	[
@@ -42,19 +83,19 @@ const UPPER: Array = [
 		".....",
 		",....",
 		".....",
-		".EEE.",
+		".LLL.",
 		".....",
 		".....",
 	],
 	[
 		".....",
-		".W.W.",
-		".L.L.",
+		".TUT.",
+		".TUT.",
+		".SSS.",
 		".....",
-		".EEE.",
+		".LLL.",
 		".....",
-		".lAl.",
-		".....",
+		".lA..",
 		".....",
 		".....",
 	],
@@ -62,25 +103,25 @@ const UPPER: Array = [
 		".....",
 		".....",
 		".....",
-		"..C..",
+		".LLL.",
 		".....",
 		".....",
 		".....",
-		".W.W.",
-		".....",
-		"..L..",
+		".T.T.",
+		".T.T.",
+		".S.S.",
 	],
 	[
 		".....",
 		".....",
 		"..,..",
 		".....",
-		".L.L.",
+		"I...J",
+		"I...J",
 		".....",
-		".....",
-		"..E..",
-		".....",
-		"..W..",
+		"..T..",
+		"..T..",
+		"..S..",
 	],
 ]
 
@@ -88,63 +129,63 @@ const UPPER: Array = [
 const MIDDLE: Array = [
 	[
 		".....",
-		"..w..",
+		"..t..",
+		"..t..",
+		".LSL.",
 		".....",
-		".E.E.",
 		".....",
-		".....",
-		"..L..",
+		".LLL.",
 		".....",
 		"..A..",
 		".....",
 	],
 	[
 		".....",
-		".W.W.",
-		".....",
-		".L.L.",
-		".....",
+		".GGG.",
+		".GGG.",
+		".GGG.",
+		".GGG.",
+		".GGG.",
+		".SSS.",
 		".....",
 		",....",
 		".....",
+	],
+	[
+		".....",
+		".....",
+		".....",
+		".JTI.",
+		"..T..",
+		"..S..",
+		".....",
+		".....",
 		".....",
 		".....",
 	],
 	[
-		"L...L",
-		".....",
-		"..W..",
-		".....",
-		"..E..",
 		".....",
 		".....",
-		".....",
-		".....",
-		".....",
-	],
-	[
-		".....",
+		".LLL.",
 		".....",
 		".LLl.",
-		".....",
-		".....",
-		"..W..",
-		".....",
-		".....",
+		"..T..",
+		"..T..",
+		"..S..",
 		".....",
 		".....",
 	],
 	[
 		".....",
-		".L.L.",
+		"I...J",
 		".....",
 		".....",
-		"..,..",
+		"..i..",
 		".....",
-		"..E..",
-		".....",
-		".....",
-		"..W..",
+		".LLL.",
+		"..T..",
+		"..T..",
+		"..S..",
 	],
 ]
 
@@ -152,36 +193,36 @@ const MIDDLE: Array = [
 const LOWER: Array = [
 	[
 		".....",
-		".L.L.",
+		"..I..",
+		"..i..",
 		".....",
 		".....",
-		"..E..",
 		".....",
 		".....",
-		"..e..",
+		".....",
 		".....",
 		".....",
 	],
 	[
 		".....",
-		".E.E.",
+		".LLL.",
 		".....",
 		".....",
 		".....",
 		".....",
 		".....",
 		".,...",
-		".L.L.",
+		".LLL.",
 		".....",
 	],
 	[
 		".....",
 		".....",
-		"..W..",
-		"..L..",
+		"..T..",
+		"..T..",
+		"..S..",
 		".....",
-		".....",
-		"l...L",
+		".lLL.",
 		".....",
 		".....",
 		".....",
@@ -189,7 +230,7 @@ const LOWER: Array = [
 	[
 		".....",
 		".....",
-		"..C..",
+		".LLL.",
 		".....",
 		".....",
 		".....",
@@ -202,10 +243,10 @@ const LOWER: Array = [
 		".....",
 		"L...L",
 		".....",
-		"..E..",
+		".LLL.",
 		".....",
 		".....",
-		"..L..",
+		".LLL.",
 		".....",
 		".....",
 		"...,.",
@@ -243,10 +284,17 @@ static func band_for(room_row: int, rooms_tall: int) -> int:
 	return Band.LOWER
 
 
+const MIRROR_FLIP := {"I": "J", "J": "I", "i": "j", "j": "i"}
+
+
 static func mirrored(rows: Array) -> Array:
 	var flipped: Array = []
 	for row: String in rows:
-		flipped.append(row.reverse())
+		var reversed := row.reverse()
+		var out := ""
+		for i in reversed.length():
+			out += MIRROR_FLIP.get(reversed[i], reversed[i])
+		flipped.append(out)
 	return flipped
 
 
@@ -273,28 +321,61 @@ static func validate() -> PackedStringArray:
 					if not LEGEND.has(row[i]):
 						problems.append("band %d room %d row %d: unknown symbol '%s'"
 							% [band, index, row_index, row[i]])
+			_validate_windows(rows, band, index, problems)
 	return problems
+
+
+static func _validate_windows(rows: Array, band: int, index: int,
+		problems: PackedStringArray) -> void:
+	for symbol: String in WINDOW_GLYPHS:
+		var size: Vector2i = WINDOW_GLYPHS[symbol]
+		var count := 0
+		var blocks := 0
+		for y in rows.size():
+			var row: String = rows[y]
+			for x in row.length():
+				if row[x] != symbol:
+					continue
+				count += 1
+				if not is_window_origin(rows, x, y):
+					continue
+				blocks += 1
+				if x + size.x > WIDTH or y + size.y > HEIGHT:
+					problems.append("band %d room %d: %s window at (%d,%d) runs off the room"
+						% [band, index, symbol, x, y])
+					continue
+				for dy in size.y:
+					for dx in size.x:
+						if glyph_at(rows, x + dx, y + dy) != symbol:
+							problems.append(
+								"band %d room %d: %s window at (%d,%d) is not a full %dx%d block"
+								% [band, index, symbol, x, y, size.x, size.y])
+		if count != blocks * size.x * size.y:
+			problems.append("band %d room %d: %d %s cells do not tile into whole windows"
+				% [band, index, count, symbol])
 
 
 static func caster_stats() -> Dictionary:
 	var casters := 0
 	var rooms := 0
-	var depths: Dictionary = {}
+	var edges: Dictionary = {}
 	var windows := 0
 	for band in [Band.UPPER, Band.MIDDLE, Band.LOWER]:
 		for rows in pool_for(band):
 			rooms += 1
-			for row: String in rows:
-				for i in row.length():
-					var spec := cell_for(row[i])
-					if spec["depth"] > 0:
+			for y in rows.size():
+				var row: String = rows[y]
+				for x in row.length():
+					var spec := cell_for(row[x])
+					var bars := bars_at(rows, x, y)
+					if bars != 0:
 						casters += 1
-						depths[spec["depth"]] = depths.get(spec["depth"], 0) + 1
+						edges[bars] = edges.get(bars, 0) + 1
 					if spec["kind"] == Cell.Kind.WINDOW:
 						windows += 1
 	return {
 		"rooms": rooms,
 		"casters_per_room": float(casters) / float(maxi(1, rooms)),
 		"windows_per_room": float(windows) / float(maxi(1, rooms)),
-		"depths": depths,
+		"edges": edges,
 	}

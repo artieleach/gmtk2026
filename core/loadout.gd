@@ -2,15 +2,13 @@ class_name Loadout extends RefCounted
 
 
 var owned: Dictionary = {}
-var charges: Dictionary = {}
 var grace: int = 0
+var ambush_ready: bool = false
 
 
 func buy(upgrade: Upgrade) -> void:
 	owned[upgrade.id] = owned.get(upgrade.id, 0) + 1
-	if upgrade.kind == Upgrade.Kind.ACTIVE:
-		charges[upgrade.id] = charges.get(upgrade.id, 0) + upgrade.magnitude
-	elif upgrade.id == Upgrade.Id.GRACE:
+	if upgrade.id == Upgrade.Id.GRACE:
 		grace = grace_max()
 
 
@@ -36,23 +34,22 @@ func refill_grace() -> void:
 	grace = grace_max()
 
 
+func ambush_bonus() -> int:
+	if not ambush_ready:
+		return 0
+	return count(Upgrade.Id.AMBUSH) * Upgrade.of(Upgrade.Id.AMBUSH).magnitude
+
+
+func arm_ambush() -> void:
+	ambush_ready = true
+
+
+func break_stillness() -> void:
+	ambush_ready = false
+
+
 func spend_grace() -> bool:
 	if grace <= 0:
 		return false
 	grace -= 1
-	return true
-
-
-func charges_of(upgrade_id: int) -> int:
-	return charges.get(upgrade_id, 0)
-
-
-func can_use(upgrade_id: int) -> bool:
-	return charges_of(upgrade_id) > 0
-
-
-func spend_charge(upgrade_id: int) -> bool:
-	if not can_use(upgrade_id):
-		return false
-	charges[upgrade_id] -= 1
 	return true

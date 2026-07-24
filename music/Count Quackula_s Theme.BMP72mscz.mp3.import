@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://wk85eavmgbsw"
+path="res://.godot/imported/Count Quackula_s Theme.BMP72mscz.mp3-712c89cda3870f578a58a9f1e7077fcc.mp3str"
+
+[deps]
+
+source_file="res://music/Count Quackula_s Theme.BMP72mscz.mp3"
+dest_files=["res://.godot/imported/Count Quackula_s Theme.BMP72mscz.mp3-712c89cda3870f578a58a9f1e7077fcc.mp3str"]
+
+[params]
+
+loop=true
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

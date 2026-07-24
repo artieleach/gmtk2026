@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://byunasxa1a2xt"
+path="res://.godot/imported/Flock of Pigeons.wav-e033e72e086548a81c1637bdfeedb286.sample"
+
+[deps]
+
+source_file="res://sfx/Flock of Pigeons.wav"
+dest_files=["res://.godot/imported/Flock of Pigeons.wav-e033e72e086548a81c1637bdfeedb286.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=1
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

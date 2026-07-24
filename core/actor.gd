@@ -15,7 +15,6 @@ var next_action_turn: int = 0
 var windup_turns: int = 0
 var lunge_target: Vector2i = Vector2i.ZERO
 var anchor: Vector2i = Vector2i.ZERO
-var feared_until_turn: int = 0
 var patrol_dir: Vector2i = Vector2i(1, 0)
 
 

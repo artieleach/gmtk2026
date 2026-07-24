@@ -122,9 +122,11 @@ func _kit_text() -> String:
 		parts.append("grace %d/%d" % [loadout.grace, loadout.grace_max()])
 	if loadout.strength() > 0:
 		parts.append("strength +%d" % loadout.strength())
-	var keys := [Upgrade.Id.JUMP, Upgrade.Id.SHADE, Upgrade.Id.TERROR, Upgrade.Id.CARVE]
-	for i in keys.size():
-		var charges := loadout.charges_of(keys[i])
-		if charges > 0:
-			parts.append("%d) %s x%d" % [i + 1, Upgrade.of(keys[i]).display, charges])
+	if loadout.has(Upgrade.Id.AMBUSH):
+		var banked: int = loadout.count(Upgrade.Id.AMBUSH) \
+			* Upgrade.of(Upgrade.Id.AMBUSH).magnitude
+		parts.append("ambush +%d%s" % [banked, "  READY" if loadout.ambush_ready else ""])
+	for id in [Upgrade.Id.JUMP, Upgrade.Id.CARVE, Upgrade.Id.RAPPEL, Upgrade.Id.SUREFOOT]:
+		if loadout.has(id):
+			parts.append(Upgrade.of(id).display.to_lower())
 	return "    ".join(parts)

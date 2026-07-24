@@ -9,6 +9,7 @@ signal run_ended(won: bool)
 signal actor_died(actor: Actor)
 signal actor_spawned(actor: Actor)
 signal enemy_telegraphed(actor: Actor)
+signal actor_attacked(attacker: Actor, target: Actor)
 signal tower_changed(pos: Vector2i)
 signal altar_opened(altar: Altar)
 signal altar_closed()
@@ -80,12 +81,12 @@ func _spawn_enemies(spawns: Array, player_pos: Vector2i) -> void:
 func _spawn_position() -> Vector2i:
 	for col in tower.cols_per_face:
 		var candidate := Vector2i(col, 0)
-		if not tower.is_blocked(candidate):
+		if tower.player_can_stand(candidate):
 			return candidate
 	for row in tower.rows:
 		for col in tower.cols:
 			var candidate := Vector2i(col, row)
-			if not tower.is_blocked(candidate):
+			if tower.player_can_stand(candidate):
 				return candidate
 	return Vector2i.ZERO
 
@@ -106,14 +107,72 @@ func try_move(dir: Vector2i) -> bool:
 		return true
 
 	if not tower.can_player_enter(player.pos, target):
+		return _try_contextual(dir, target)
+
+	return _move_player_to(target)
+
+
+func _try_contextual(dir: Vector2i, target: Vector2i) -> bool:
+	if player.loadout == null:
 		return false
 
+	if dir == Vector2i(0, 1) and player.loadout.has(Upgrade.Id.JUMP) \
+			and not tower.is_blocked(target):
+		if _move_player_to(drop_landing()):
+			return true
+
+	if dir.y == 0 and player.loadout.has(Upgrade.Id.RAPPEL) \
+			and tower.barred_edge(player.pos, target):
+		if _move_player_to(drop_landing()):
+			return true
+
+	if dir == Vector2i(0, -1) and player.loadout.has(Upgrade.Id.SUREFOOT) \
+			and tower.player_can_stand(target) and tower.barred_edge(player.pos, target):
+		return _move_player_to(target)
+
+	var cell: Cell = tower.at(target)
+	if player.loadout.has(Upgrade.Id.CARVE) and cell != null \
+			and cell.kind != Cell.Kind.WINDOW and (cell.blocked or cell.bars != 0):
+		_break_cell(target)
+		return true
+
+	return false
+
+
+func _move_player_to(dest: Vector2i) -> bool:
+	if dest == player.pos:
+		return false
+	if player.loadout != null:
+		player.loadout.break_stillness()
 	var from := player.pos
-	player.pos = target
-	actor_moved.emit(player, from, target)
+	player.pos = dest
+	actor_moved.emit(player, from, dest)
 	advance_turn()
 	_check_altar()
 	return true
+
+
+func drop_landing() -> Vector2i:
+	var landing := player.pos
+	for step in range(1, tower.rows):
+		var candidate := Vector2i(player.pos.x, player.pos.y + step)
+		if not tower.player_can_stand(candidate) or actor_at(candidate) != null:
+			break
+		landing = candidate
+	return landing
+
+
+func _break_cell(pos: Vector2i) -> void:
+	var cell: Cell = tower.at(pos)
+	if cell == null:
+		return
+	cell.blocked = false
+	cell.kind = Cell.Kind.WALL
+	cell.bars = 0
+	tower_changed.emit(pos)
+	if player != null and player.loadout != null:
+		player.loadout.break_stillness()
+	advance_turn()
 
 
 func _check_altar() -> void:
@@ -127,7 +186,10 @@ func _check_altar() -> void:
 
 
 func _player_attack(target: Actor) -> void:
+	actor_attacked.emit(player, target)
 	damage(target, attack_power())
+	if player.loadout != null:
+		player.loadout.break_stillness()
 	if target.is_alive():
 		return
 	var gained := target.blood()
@@ -177,91 +239,10 @@ func _lantern_distance_sq(pos: Vector2i, origin: Vector2i) -> int:
 	return dx * dx + dy * dy
 
 
-func use_jump(dir: Vector2i) -> bool:
-	if not _ready_for(Upgrade.Id.JUMP) or dir == Vector2i.ZERO:
-		return false
-	var landing := jump_landing(dir)
-	if landing == player.pos:
-		return false
-
-	player.loadout.spend_charge(Upgrade.Id.JUMP)
-	var from := player.pos
-	player.pos = landing
-	actor_moved.emit(player, from, landing)
-	advance_turn()
-	_check_altar()
-	return true
-
-
-func jump_landing(dir: Vector2i) -> Vector2i:
-	var landing := player.pos
-	for step in range(1, Tuning.JUMP_RANGE + 1):
-		var candidate := tower.wrap_pos(player.pos + dir * step)
-		if not tower.in_bounds(candidate):
-			break
-		if tower.is_blocked(candidate) or actor_at(candidate) != null:
-			continue
-		landing = candidate
-	return landing
-
-
-func use_shade() -> bool:
-	if not _ready_for(Upgrade.Id.SHADE):
-		return false
-	var cell: Cell = tower.at(player.pos)
-	if cell == null or cell.casts_shadow():
-		return false
-	player.loadout.spend_charge(Upgrade.Id.SHADE)
-	cell.protrusion_depth = Tuning.SHADE_DEPTH
-	if cell.kind != Cell.Kind.ALTAR:
-		cell.kind = Cell.Kind.LEDGE
-	tower.invalidate_protrusion_cache()
-	tower_changed.emit(player.pos)
-	advance_turn()
-	return true
-
-
-func use_terror() -> bool:
-	if not _ready_for(Upgrade.Id.TERROR):
-		return false
-	player.loadout.spend_charge(Upgrade.Id.TERROR)
-	for actor in actors:
-		if actor.is_player():
-			continue
-		var reach := maxi(
-			absi(tower.col_delta(player.pos.x, actor.pos.x)),
-			absi(actor.pos.y - player.pos.y))
-		if reach <= Tuning.TERROR_RADIUS:
-			actor.feared_until_turn = turn + Tuning.TERROR_TURNS
-	advance_turn()
-	return true
-
-
-func use_carve(dir: Vector2i) -> bool:
-	if not _ready_for(Upgrade.Id.CARVE) or dir == Vector2i.ZERO:
-		return false
-	var target := tower.wrap_pos(player.pos + dir)
-	var cell: Cell = tower.at(target)
-	if cell == null or not (cell.blocked or cell.casts_shadow()):
-		return false
-	player.loadout.spend_charge(Upgrade.Id.CARVE)
-	cell.blocked = false
-	cell.protrusion_depth = 0
-	cell.kind = Cell.Kind.WALL
-	tower.invalidate_protrusion_cache()
-	tower_changed.emit(target)
-	advance_turn()
-	return true
-
-
-func _ready_for(upgrade_id: int) -> bool:
-	return running and pending_altar == null and player != null \
-		and player.loadout != null and player.loadout.can_use(upgrade_id)
-
-
 func attack_power() -> int:
-	var bonus := player.loadout.strength() if player != null and player.loadout != null else 0
-	return player_damage + bonus
+	if player == null or player.loadout == null:
+		return player_damage
+	return player_damage + player.loadout.strength() + player.loadout.ambush_bonus()
 
 
 func altar_at(pos: Vector2i) -> Altar:
@@ -309,6 +290,8 @@ func wait_turn() -> bool:
 	if not running or pending_altar != null:
 		return false
 	advance_turn()
+	if player != null and player.loadout != null:
+		player.loadout.arm_ambush()
 	return true
 
 

@@ -38,7 +38,6 @@ func build() -> TowerData:
 	_clear_margins(tower)
 	_enforce_row_budget(tower)
 	_ensure_descendable(tower)
-	tower.invalidate_protrusion_cache()
 	_populate(tower)
 	return tower
 
@@ -74,7 +73,13 @@ func _stamp_room(tower: TowerData, rows: Array, left_col: int, top_row: int) -> 
 			var cell := tower.at(pos)
 			if spec["kind"] != -1:
 				cell.kind = spec["kind"]
-			cell.protrusion_depth = spec["depth"]
+			cell.bars = RoomTemplates.bars_at(rows, x, y)
+			if RoomTemplates.is_window_origin(rows, x, y):
+				tower.windows.append({
+					"origin": pos,
+					"size": RoomTemplates.window_size(line[x]),
+					"open": false,
+				})
 			match spec["anchor"]:
 				"creature":
 					_creature_anchors.append(pos)
@@ -83,16 +88,45 @@ func _stamp_room(tower: TowerData, rows: Array, left_col: int, top_row: int) -> 
 
 
 func _ruin(tower: TowerData) -> void:
+	var avg_size := (Tuning.RUBBLE_CLUSTER_MIN + Tuning.RUBBLE_CLUSTER_MAX) / 2.0
 	for row in tower.rows:
 		var t := float(row) / float(maxi(1, tower.rows - 1))
 		var chance := lerpf(Tuning.RUIN_CHANCE_TOP, Tuning.RUIN_CHANCE_BOTTOM, t)
+		var seed_chance := chance / avg_size
 		for col in cols:
 			var cell := tower.at(Vector2i(col, row))
-			if cell.protrusion_depth > 0 or cell.blocked:
+			if not _can_ruin(cell):
 				continue
-			if rng.randf() < chance:
-				cell.kind = Cell.Kind.RUBBLE
-				cell.blocked = true
+			if rng.randf() < seed_chance:
+				_grow_rubble_cluster(tower, Vector2i(col, row))
+
+
+func _can_ruin(cell: Cell) -> bool:
+	return cell != null and cell.bars == 0 and not cell.blocked \
+		and cell.kind != Cell.Kind.WINDOW
+
+
+func _grow_rubble_cluster(tower: TowerData, seed: Vector2i) -> void:
+	var target := rng.randi_range(Tuning.RUBBLE_CLUSTER_MIN, Tuning.RUBBLE_CLUSTER_MAX)
+	var members: Array[Vector2i] = [seed]
+	_lay_rubble(tower, seed)
+	var attempts := target * 8
+	while members.size() < target and attempts > 0:
+		attempts -= 1
+		var from: Vector2i = members[rng.randi_range(0, members.size() - 1)]
+		var dir: Vector2i = TowerData.DIRS[rng.randi_range(0, TowerData.DIRS.size() - 1)]
+		var next := tower.wrap_pos(from + dir)
+		var cell := tower.at(next)
+		if not _can_ruin(cell):
+			continue
+		_lay_rubble(tower, next)
+		members.append(next)
+
+
+func _lay_rubble(tower: TowerData, pos: Vector2i) -> void:
+	var cell := tower.at(pos)
+	cell.kind = Cell.Kind.RUBBLE
+	cell.blocked = true
 
 
 func _populate(tower: TowerData) -> void:
@@ -130,19 +164,21 @@ func _roll_offers() -> Array[int]:
 
 func _populate_segment(tower: TowerData, recipe: SegmentRecipe, top_row: int,
 		bottom_row: int, index: int, taken: Dictionary) -> void:
-	for row in range(top_row, bottom_row):
-		for col in cols:
-			var pos := Vector2i(col, row)
-			if tower.at(pos).kind != Cell.Kind.WINDOW:
-				continue
-			if rng.randf() >= recipe.window_swiper_chance:
-				continue
-			if not _is_spawnable(tower, pos, taken):
-				continue
-			_place(tower, pos, Species.Id.WINDOW_SWIPER, 0, taken)
+	for window in tower.windows:
+		var origin: Vector2i = window["origin"]
+		if origin.y < top_row or origin.y >= bottom_row:
+			continue
+		if rng.randf() >= recipe.window_swiper_chance:
+			continue
+		var size: Vector2i = window["size"]
+		var seat := tower.wrap_pos(origin + Vector2i(size.x / 2, size.y / 2))
+		if not _is_spawnable(tower, seat, taken):
+			continue
+		_place(tower, seat, Species.Id.WINDOW_SWIPER, 0, taken)
+		window["open"] = true
 
 	for _i in _scaled(&"gargoyle", recipe.gargoyle_count):
-		var pos := _find_spot(tower, top_row, bottom_row, taken, Terrain.PROTRUSION)
+		var pos := _find_spot(tower, top_row, bottom_row, taken, Terrain.BARRIER)
 		if pos != NO_SPOT:
 			_place(tower, pos, Species.Id.GARGOYLE, 0, taken)
 
@@ -162,7 +198,7 @@ func _populate_segment(tower: TowerData, recipe: SegmentRecipe, top_row: int,
 			_place(tower, pos, Species.Id.LANTERN_GUARD, Tuning.PATROL_LEASH, taken)
 
 	for _i in _scaled(&"mason", recipe.mason_count):
-		var pos := _find_spot(tower, top_row, bottom_row, taken, Terrain.PROTRUSION)
+		var pos := _find_spot(tower, top_row, bottom_row, taken, Terrain.BARRIER)
 		if pos != NO_SPOT:
 			_place(tower, pos, Species.Id.STONEMASON, 0, taken)
 
@@ -198,14 +234,14 @@ const NO_SPOT := Vector2i(-1, -1)
 
 enum Terrain {
 	ANY,
-	PROTRUSION,
+	BARRIER,
 	BARE,
 }
 
 
 func _suits(tower: TowerData, pos: Vector2i, terrain: int) -> bool:
 	match terrain:
-		Terrain.PROTRUSION:
+		Terrain.BARRIER:
 			return tower.at(pos).casts_shadow()
 		Terrain.BARE:
 			return not tower.at(pos).casts_shadow()
@@ -279,8 +315,8 @@ func _open_cell(tower: TowerData, pos: Vector2i) -> void:
 	if cell == null:
 		return
 	cell.blocked = false
-	cell.protrusion_depth = 0
 	cell.kind = Cell.Kind.WALL
+	cell.bars = 0
 
 
 func _enforce_row_budget(tower: TowerData) -> void:
@@ -345,7 +381,9 @@ func _carve_one(tower: TowerData, reached: Dictionary) -> bool:
 	var stone := Vector2i(-1, -1)
 	for col in cols:
 		var candidate := Vector2i(col, target_row)
-		if reached.has(candidate) or not _adjacent_to_reached(tower, candidate, reached):
+		if reached.has(candidate) or not reached.has(Vector2i(col, frontier_row)):
+			continue
+		if tower.at(candidate).kind == Cell.Kind.WINDOW:
 			continue
 		if tower.at(candidate).blocked:
 			rubble = candidate
@@ -358,10 +396,3 @@ func _carve_one(tower: TowerData, reached: Dictionary) -> bool:
 		return false
 	_open_cell(tower, victim)
 	return true
-
-
-func _adjacent_to_reached(tower: TowerData, pos: Vector2i, reached: Dictionary) -> bool:
-	for dir in TowerData.DIRS:
-		if reached.has(tower.wrap_pos(pos + dir)):
-			return true
-	return false

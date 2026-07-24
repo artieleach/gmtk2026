@@ -31,11 +31,6 @@ func _take_turn(enemy: Actor) -> void:
 	if game.turn < enemy.next_action_turn:
 		return
 
-	if game.turn < enemy.feared_until_turn:
-		Brains.flee(enemy, self)
-		enemy.next_action_turn = game.turn + maxi(1, enemy.species.move_period)
-		return
-
 	dispatch(enemy)
 	if enemy.is_winding_up():
 		enemy.next_action_turn = game.turn + 1
@@ -165,46 +160,33 @@ func spawn_brood(hive: Actor) -> void:
 		return
 
 
-func protrusion_at(pos: Vector2i) -> int:
+func barrier_at(pos: Vector2i) -> bool:
 	var cell: Cell = game.tower.at(pos)
-	return cell.protrusion_depth if cell != null else 0
+	return cell != null and cell.bars != 0
 
 
 func gnaw(enemy: Actor) -> void:
 	var cell: Cell = game.tower.at(enemy.pos)
-	if cell == null or cell.protrusion_depth <= Tuning.MASON_MIN_DEPTH:
+	if cell == null or cell.bars == 0:
 		return
-	cell.protrusion_depth -= 1
-	game.tower.invalidate_protrusion_cache()
+	cell.bars = 0
 	game.tower_changed.emit(enemy.pos)
 
 
-func nearest_protrusion(from: Vector2i) -> Vector2i:
+func nearest_barrier(from: Vector2i) -> Vector2i:
 	const SEARCH := 6
 	var best := Brains.NO_TARGET
 	var best_distance := 9999
 	for row in range(from.y - SEARCH, from.y + SEARCH + 1):
 		for offset in range(-SEARCH, SEARCH + 1):
 			var pos := game.tower.wrap_pos(Vector2i(from.x + offset, row))
-			if not game.tower.in_bounds(pos) or protrusion_at(pos) <= Tuning.MASON_MIN_DEPTH:
+			if not game.tower.in_bounds(pos) or not barrier_at(pos):
 				continue
 			var distance := maxi(absi(offset), absi(row - from.y))
 			if distance < best_distance:
 				best_distance = distance
 				best = pos
 	return best
-
-
-func step_away(enemy: Actor) -> bool:
-	var target := game.player
-	if target == null:
-		return false
-	var flee_dir := Vector2i(
-		-signi(game.tower.col_delta(enemy.pos.x, target.pos.x)),
-		-signi(target.pos.y - enemy.pos.y))
-	if flee_dir == Vector2i.ZERO:
-		return false
-	return step_toward(enemy, game.tower.wrap_pos(enemy.pos + flee_dir * 4), false)
 
 
 func _can_enter(enemy: Actor, pos: Vector2i, avoid_light: bool) -> bool:
@@ -228,6 +210,7 @@ func move_to(enemy: Actor, pos: Vector2i) -> void:
 
 
 func attack(enemy: Actor, target: Actor) -> void:
+	game.actor_attacked.emit(enemy, target)
 	game.damage(target, enemy.species.damage)
 
 

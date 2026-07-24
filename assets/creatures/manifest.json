@@ -1,0 +1,50 @@
+{
+  "cat_idle": {
+    "frames": 16,
+    "h": 560,
+    "ms": 83,
+    "w": 280
+  },
+  "cat_swipe_a": {
+    "frames": 4,
+    "h": 560,
+    "ms": 82,
+    "w": 280
+  },
+  "cat_swipe_b": {
+    "frames": 4,
+    "h": 560,
+    "ms": 82,
+    "w": 280
+  },
+  "duck_flap": {
+    "frames": 6,
+    "h": 300,
+    "ms": 83,
+    "w": 300
+  },
+  "gargoyle_close": {
+    "frames": 11,
+    "h": 560,
+    "ms": 83,
+    "w": 280
+  },
+  "gargoyle_open": {
+    "frames": 11,
+    "h": 560,
+    "ms": 83,
+    "w": 280
+  },
+  "silverfish_idle": {
+    "frames": 6,
+    "h": 300,
+    "ms": 83,
+    "w": 300
+  },
+  "wasp_idle": {
+    "frames": 6,
+    "h": 300,
+    "ms": 83,
+    "w": 300
+  }
+}

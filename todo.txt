@@ -1,1 +1,0 @@
-currently, the player can clip through impassable barriers by going through at an angle

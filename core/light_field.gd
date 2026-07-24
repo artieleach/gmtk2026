@@ -11,10 +11,9 @@ const MIN_REACH := 0.0001
 
 var _tower: TowerData = null
 var front_row: float = 0.0
-var _offset_per_depth := Vector2.ZERO
-var _max_depth: int = 0
+var _offset := Vector2.ZERO
 var _casts: bool = false
-var _lanterns: Array[Vector3] = []
+var _lanterns: Array[Vector2] = []
 var _memo: Dictionary = {}
 
 
@@ -22,15 +21,12 @@ func bind(tower: TowerData, sun: SunModel, turn: int, lanterns: Array = []) -> v
 	_tower = tower
 	front_row = sun.front_row(turn)
 	_casts = sun.casts_shadows(turn)
-	_offset_per_depth = sun.shadow_offset_per_depth(turn)
-	_max_depth = tower.max_protrusion_depth()
+	_offset = sun.shadow_offset(turn)
 	_memo.clear()
 
 	_lanterns.clear()
 	for pos: Vector2i in lanterns:
-		var cell: Cell = tower.at(pos)
-		var stood_on := float(cell.protrusion_depth) if cell != null else 0.0
-		_lanterns.append(Vector3(pos.x, pos.y, stood_on + Tuning.LANTERN_HEIGHT))
+		_lanterns.append(Vector2(pos))
 
 
 func state_at(pos: Vector2i) -> int:
@@ -61,17 +57,12 @@ func _sun_state(pos: Vector2i) -> int:
 
 
 func shadow_margin(point: Vector2) -> float:
-	var limit := float(_max_depth)
-	var floor_margin := -limit - 1.0
-	if not _casts or limit <= 0.0 or _offset_per_depth.length() < MIN_REACH:
+	var floor_margin := -2.0
+	if not _casts or _offset.length() < MIN_REACH:
 		return floor_margin
 
 	var cell := Vector2i(_texel(point.x), _texel(point.y))
-	var here := _depth_at(cell)
-	if here > 0.0:
-		return here
-
-	var dir := -_offset_per_depth
+	var dir := -_offset
 	var step := Vector2i(1 if dir.x > 0.0 else -1, 1 if dir.y > 0.0 else -1)
 	var next := Vector2(INF, INF)
 	var span := Vector2(INF, INF)
@@ -85,29 +76,25 @@ func shadow_margin(point: Vector2) -> float:
 	var margin := floor_margin
 	for _i in Tuning.MAX_SHADOW_CELLS:
 		var enter: float
+		var into := cell
 		if next.x < next.y:
 			enter = next.x
-			cell.x += step.x
+			into.x += step.x
 			next.x += span.x
 		else:
 			enter = next.y
-			cell.y += step.y
+			into.y += step.y
 			next.y += span.y
-		if cell.y < 0 or cell.y >= _tower.rows:
-			break
-		var depth := _depth_at(cell)
-		if depth > 0.0:
-			margin = maxf(margin, depth - enter)
+		if _tower.barred_edge(cell, into):
+			margin = maxf(margin, 1.0 - enter)
 			if margin >= 0.0:
 				break
-		if enter > limit:
+		if enter > 1.0:
+			break
+		cell = into
+		if cell.y < 0 or cell.y >= _tower.rows:
 			break
 	return margin
-
-
-func _depth_at(cell: Vector2i) -> float:
-	var wrapped: Cell = _tower.cells[cell.y * _tower.cols + _tower.wrap_col(cell.x)]
-	return float(wrapped.protrusion_depth)
 
 
 func _texel(coord: float) -> int:
@@ -119,19 +106,16 @@ func _lantern_lights(pos: Vector2i) -> bool:
 		return false
 	var point := Vector2(pos)
 	for lantern in _lanterns:
-		var delta := _wall_delta(point, Vector2(lantern.x, lantern.y))
+		var delta := _wall_delta(point, lantern)
 		if delta.length() > Tuning.LANTERN_RADIUS:
 			continue
-		if not _blocked_from_lantern(point, delta, lantern.z):
+		if not _blocked_from_lantern(point, delta):
 			return true
 	return false
 
 
-func _blocked_from_lantern(point: Vector2, delta: Vector2, source_depth: float) -> bool:
+func _blocked_from_lantern(point: Vector2, delta: Vector2) -> bool:
 	var cell := Vector2i(_texel(point.x), _texel(point.y))
-	if _depth_at(cell) > 0.0:
-		return true
-
 	var dir := -delta
 	var step := Vector2i(1 if dir.x > 0.0 else -1, 1 if dir.y > 0.0 else -1)
 	var next := Vector2(INF, INF)
@@ -145,19 +129,21 @@ func _blocked_from_lantern(point: Vector2, delta: Vector2, source_depth: float) 
 
 	for _i in Tuning.MAX_LANTERN_CELLS:
 		var enter: float
+		var into := cell
 		if next.x < next.y:
 			enter = next.x
-			cell.x += step.x
+			into.x += step.x
 			next.x += span.x
 		else:
 			enter = next.y
-			cell.y += step.y
+			into.y += step.y
 			next.y += span.y
 		if enter > 1.0:
 			return false
-		if cell.y < 0 or cell.y >= _tower.rows:
+		if _tower.barred_edge(cell, into) and Tuning.LANTERN_HEIGHT * enter < 1.0:
 			return true
-		if _depth_at(cell) > source_depth * enter:
+		cell = into
+		if cell.y < 0 or cell.y >= _tower.rows:
 			return true
 	return false
 

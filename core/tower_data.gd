@@ -13,7 +13,7 @@ var rows: int
 var cols_per_face: int
 var cells: Array[Cell] = []
 
-var _max_protrusion_depth: int = -1
+var windows: Array = []
 
 
 func _init(p_cols: int = Tuning.COLS, p_rows: int = Tuning.ROWS) -> void:
@@ -60,35 +60,42 @@ func col_delta(from_col: int, to_col: int) -> int:
 	return wrapi(to_col - from_col, -(cols / 2), cols / 2)
 
 
-func invalidate_protrusion_cache() -> void:
-	_max_protrusion_depth = -1
-
-
-func max_protrusion_depth() -> int:
-	if _max_protrusion_depth < 0:
-		_max_protrusion_depth = 0
-		for cell in cells:
-			_max_protrusion_depth = maxi(_max_protrusion_depth, cell.protrusion_depth)
-	return _max_protrusion_depth
-
-
 func is_blocked(pos: Vector2i) -> bool:
 	var cell: Cell = at(pos)
 	return cell == null or cell.blocked
 
 
+func is_window(pos: Vector2i) -> bool:
+	var cell: Cell = at(pos)
+	return cell != null and cell.kind == Cell.Kind.WINDOW
+
+
+func player_can_stand(pos: Vector2i) -> bool:
+	return in_bounds(pos) and not is_blocked(pos) and not is_window(pos)
+
+
 func barred_edge(from: Vector2i, to: Vector2i) -> bool:
-	if wrap_col(from.x) != wrap_col(to.x):
-		return false
-	if absi(from.y - to.y) != 1:
-		return false
-	var lower: Vector2i = to if to.y > from.y else from
-	var cell: Cell = at(lower)
-	return cell != null and cell.casts_shadow()
+	var dcol := col_delta(from.x, to.x)
+	var drow := to.y - from.y
+	var flag := Cell.bar_for(Vector2i(dcol, drow))
+	if flag != 0:
+		var a: Cell = at(from)
+		if a != null and a.bars_side(flag):
+			return true
+		var b: Cell = at(to)
+		return b != null and b.bars_side(Cell.opposite(flag))
+	if absi(dcol) == 1 and absi(drow) == 1:
+		return _elbow_barred(from, Vector2i(from.x + dcol, from.y), to) \
+			and _elbow_barred(from, Vector2i(from.x, to.y), to)
+	return false
+
+
+func _elbow_barred(from: Vector2i, mid: Vector2i, to: Vector2i) -> bool:
+	return barred_edge(from, mid) or barred_edge(mid, to)
 
 
 func can_player_enter(from: Vector2i, to: Vector2i) -> bool:
-	return in_bounds(to) and not is_blocked(to) and not barred_edge(from, to)
+	return player_can_stand(to) and not barred_edge(from, to)
 
 
 func neighbours(pos: Vector2i) -> Array[Vector2i]:

@@ -60,10 +60,6 @@ static func patroller(enemy: Actor, api) -> void:
 	enemy.patrol_dir = -enemy.patrol_dir
 
 
-static func flee(enemy: Actor, api) -> void:
-	api.step_away(enemy)
-
-
 static func hive(enemy: Actor, api) -> void:
 	if api.brood_count(enemy) >= Tuning.NEST_SWARMLINGS:
 		return
@@ -75,9 +71,9 @@ static func mason(enemy: Actor, api) -> void:
 	if api.is_adjacent(enemy.pos, player.pos):
 		api.attack(enemy, player)
 		return
-	if api.protrusion_at(enemy.pos) > Tuning.MASON_MIN_DEPTH:
+	if api.barrier_at(enemy.pos):
 		api.gnaw(enemy)
 		return
-	var target: Vector2i = api.nearest_protrusion(enemy.pos)
+	var target: Vector2i = api.nearest_barrier(enemy.pos)
 	if target != NO_TARGET:
 		api.step_toward(enemy, target, false)
