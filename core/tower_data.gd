@@ -105,3 +105,25 @@ func neighbours(pos: Vector2i) -> Array[Vector2i]:
 		if in_bounds(target):
 			result.append(target)
 	return result
+
+
+func unwall_edge(from: Vector2i, to: Vector2i) -> Array[Vector2i]:
+	var flag := Cell.bar_for(Vector2i(col_delta(from.x, to.x), to.y - from.y))
+	if flag == 0:
+		return []
+	var changed: Array[Vector2i] = []
+	if _drop_bars(from, flag):
+		changed.append(wrap_pos(from))
+	if _drop_bars(to, Cell.opposite(flag)):
+		changed.append(wrap_pos(to))
+	return changed
+
+
+func _drop_bars(pos: Vector2i, flags: int) -> bool:
+	var cell: Cell = at(pos)
+	if cell == null or cell.bars & flags == 0:
+		return false
+	cell.bars &= ~flags
+	if cell.bars == 0:
+		cell.kind = Cell.Kind.WALL
+	return true

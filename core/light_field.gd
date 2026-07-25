@@ -29,6 +29,10 @@ func bind(tower: TowerData, sun: SunModel, turn: int, lanterns: Array = []) -> v
 		_lanterns.append(Vector2(pos))
 
 
+func invalidate() -> void:
+	_memo.clear()
+
+
 func state_at(pos: Vector2i) -> int:
 	if _tower == null or pos.y < 0 or pos.y >= _tower.rows:
 		return State.DARK

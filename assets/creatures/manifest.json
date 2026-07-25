@@ -1,9 +1,9 @@
 {
   "cat_idle": {
-    "frames": 16,
-    "h": 560,
+    "frames": 31,
+    "h": 600,
     "ms": 83,
-    "w": 280
+    "w": 300
   },
   "cat_swipe_a": {
     "frames": 4,
@@ -16,6 +16,12 @@
     "h": 560,
     "ms": 82,
     "w": 280
+  },
+  "duck_fire": {
+    "frames": 11,
+    "h": 300,
+    "ms": 83,
+    "w": 300
   },
   "duck_flap": {
     "frames": 6,
@@ -35,14 +41,32 @@
     "ms": 83,
     "w": 280
   },
+  "nest_idle": {
+    "frames": 11,
+    "h": 300,
+    "ms": 83,
+    "w": 300
+  },
   "silverfish_idle": {
     "frames": 6,
     "h": 300,
     "ms": 83,
     "w": 300
   },
+  "sunbird_idle": {
+    "frames": 18,
+    "h": 600,
+    "ms": 83,
+    "w": 300
+  },
   "wasp_idle": {
     "frames": 6,
+    "h": 300,
+    "ms": 83,
+    "w": 300
+  },
+  "weasel_idle": {
+    "frames": 8,
     "h": 300,
     "ms": 83,
     "w": 300

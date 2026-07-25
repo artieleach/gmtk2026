@@ -8,7 +8,7 @@ enum Kind {
 	PILASTER,
 	WINDOW,
 	RUBBLE,
-	ALTAR,
+	PEDESTAL,
 }
 
 const BAR_TOP := 1
@@ -40,6 +40,19 @@ static func bar_for(dir: Vector2i) -> int:
 	if dir == Vector2i(1, 0):
 		return BAR_RIGHT
 	return 0
+
+
+static func dir_for(flag: int) -> Vector2i:
+	match flag:
+		BAR_TOP:
+			return Vector2i(0, -1)
+		BAR_BOTTOM:
+			return Vector2i(0, 1)
+		BAR_LEFT:
+			return Vector2i(-1, 0)
+		BAR_RIGHT:
+			return Vector2i(1, 0)
+	return Vector2i.ZERO
 
 
 static func opposite(flag: int) -> int:

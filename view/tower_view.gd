@@ -10,7 +10,7 @@ const KIND_COLORS := {
 	Cell.Kind.PILASTER: Color(0.52, 0.54, 0.59),
 	Cell.Kind.WINDOW: Color(0.13, 0.11, 0.17),
 	Cell.Kind.RUBBLE: Color(0.24, 0.22, 0.26),
-	Cell.Kind.ALTAR: Color(0.62, 0.16, 0.22),
+	Cell.Kind.PEDESTAL: Color(0.62, 0.16, 0.22),
 }
 const COLOR_BLOCKED := Color(0.24, 0.22, 0.26)
 

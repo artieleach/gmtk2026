@@ -32,12 +32,6 @@ static func of(species_id: int) -> Species:
 	return _table.get(species_id)
 
 
-static func all_ids() -> Array:
-	if _table.is_empty():
-		_build_table()
-	return _table.keys()
-
-
 static func _make(id: int, display: String, max_hp: int, damage: int, blood: int,
 		move_period: int, lunge_range: int, light_rule: int, brain_id: StringName) -> Species:
 	var s := Species.new()

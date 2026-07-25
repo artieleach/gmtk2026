@@ -17,7 +17,7 @@ const WALL_H := HEIGHT * 2 + 1
 const OBJECTS := {
 	".": {"anchor": "", "route": false, "kind": -1},
 	",": {"anchor": "creature", "route": false, "kind": -1},
-	"A": {"anchor": "altar", "route": false, "kind": -1},
+	"A": {"anchor": "pickup", "route": false, "kind": -1},
 	"o": {"anchor": "", "route": true, "kind": -1},
 	"T": {"anchor": "", "route": false, "kind": Cell.Kind.WINDOW},
 	"U": {"anchor": "", "route": false, "kind": Cell.Kind.WINDOW},
@@ -1535,8 +1535,8 @@ static func _validate_layers(room: Dictionary, label: String,
 	for y in HEIGHT:
 		for x in WIDTH:
 			var spec: Dictionary = OBJECTS.get(glyph_at(objects, x, y), OBJECTS["."])
-			if spec["anchor"] == "altar" and bars_at(walls, x, y) != 0:
-				problems.append("%s: the altar at (%d, %d) stands on a wall, so no upgrade can be seated there"
+			if spec["anchor"] == "pickup" and bars_at(walls, x, y) != 0:
+				problems.append("%s: the pickup anchor at (%d, %d) stands on a wall, so no upgrade can be seated there"
 					% [label, x, y])
 
 	for y in HEIGHT:

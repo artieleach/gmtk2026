@@ -169,8 +169,14 @@ func gnaw(enemy: Actor) -> void:
 	var cell: Cell = game.tower.at(enemy.pos)
 	if cell == null or cell.bars == 0:
 		return
-	cell.bars = 0
-	game.tower_changed.emit(enemy.pos)
+	var walls := cell.bars
+	for flag in [Cell.BAR_TOP, Cell.BAR_RIGHT, Cell.BAR_BOTTOM, Cell.BAR_LEFT]:
+		if walls & flag == 0:
+			continue
+		var beyond := game.tower.wrap_pos(enemy.pos + Cell.dir_for(flag))
+		for changed in game.tower.unwall_edge(enemy.pos, beyond):
+			game.notify_tower_changed(changed)
+	game.barrier_broken.emit(enemy.pos, false)
 
 
 func nearest_barrier(from: Vector2i) -> Vector2i:

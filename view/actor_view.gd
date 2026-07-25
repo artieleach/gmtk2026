@@ -29,8 +29,11 @@ const CLIPS := {
 	Species.Id.CRAWLER: {"idle": "silverfish_idle"},
 	Species.Id.GARGOYLE: {"idle": "gargoyle_close", "open": "gargoyle_open"},
 	Species.Id.SWARMLING: {"idle": "wasp_idle"},
+	Species.Id.SHADE_LURKER: {"idle": "weasel_idle"},
+	Species.Id.LANTERN_GUARD: {"idle": "sunbird_idle"},
+	Species.Id.NEST: {"idle": "nest_idle"},
 }
-const PLAYER_CLIPS := {"idle": "duck_flap"}
+const PLAYER_CLIPS := {"idle": "duck_flap", "burning": "duck_fire"}
 
 const SWIPE_SECS := 0.34
 
@@ -179,7 +182,7 @@ func _draw_telegraph(enemy: Actor) -> void:
 func _draw_player(actor: Actor, rect: Rect2) -> void:
 	var burning := game.light.state_at(actor.pos) == LightField.State.LIT
 	if _has_clips(PLAYER_CLIPS):
-		_draw_sprite(actor, rect, PLAYER_CLIPS["idle"], BURNING if burning else Color.WHITE)
+		_draw_sprite(actor, rect, PLAYER_CLIPS["burning" if burning else "idle"], Color.WHITE)
 		_draw_health_pips(actor, rect)
 		return
 	_draw_player_placeholder(actor, rect, burning)

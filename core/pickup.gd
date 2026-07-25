@@ -14,4 +14,4 @@ static func create(p_pos: Vector2i, p_upgrade_id: int) -> Pickup:
 
 
 func price() -> int:
-	return Tuning.UPGRADE_PRICE
+	return Upgrade.of(upgrade_id).price

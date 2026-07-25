@@ -17,7 +17,7 @@ var spawns: Array[Dictionary] = []
 var pickups: Array[Pickup] = []
 var letters: Array[Letter] = []
 var _creature_anchors: Array[Vector2i] = []
-var _altar_anchors: Array[Vector2i] = []
+var _pedestal_anchors: Array[Vector2i] = []
 var _carry: Dictionary = {}
 var route_start_face: int = 0
 var _route_bags: Dictionary = {}
@@ -37,7 +37,7 @@ func build() -> TowerData:
 	RoomTemplates.ensure_valid()
 	var tower := TowerData.new(cols, segment_count * rows_per_segment)
 	_creature_anchors.clear()
-	_altar_anchors.clear()
+	_pedestal_anchors.clear()
 	_route_bags.clear()
 	carves = 0
 	route_start_face = rng.randi_range(0, Tuning.FACES - 1)
@@ -107,8 +107,8 @@ func _stamp_room(tower: TowerData, room: Dictionary, left_col: int, top_row: int
 			match anchor:
 				"creature":
 					_creature_anchors.append(pos)
-				"altar":
-					_altar_anchors.append(pos)
+				"pickup":
+					_pedestal_anchors.append(pos)
 
 
 func _ruin(tower: TowerData) -> void:
@@ -164,30 +164,30 @@ func _populate(tower: TowerData) -> void:
 		var top_row: int = index * rows_per_segment
 		var bottom_row: int = mini(top_row + rows_per_segment, tower.rows)
 		_populate_segment(tower, recipe, top_row, bottom_row, index, taken)
-		var altar := _place_pickups(tower, top_row, bottom_row, taken)
-		_place_letters(tower, top_row, bottom_row, taken, altar)
+		var pedestal := _place_pickups(tower, top_row, bottom_row, taken)
+		_place_letters(tower, top_row, bottom_row, taken, pedestal)
 
 
 func _place_pickups(tower: TowerData, top_row: int, bottom_row: int,
 		taken: Dictionary) -> Vector2i:
 	var placed := NO_SPOT
 	for _i in Tuning.PICKUPS_PER_SEGMENT:
-		var pos := _take_anchor(_altar_anchors, tower, top_row, bottom_row, taken, Terrain.BARE)
+		var pos := _take_anchor(_pedestal_anchors, tower, top_row, bottom_row, taken, Terrain.BARE)
 		if pos == NO_SPOT:
 			pos = _find_spot(tower, top_row, bottom_row, taken, Terrain.BARE)
 		if pos == NO_SPOT:
 			continue
 		taken[pos] = true
-		tower.at(pos).kind = Cell.Kind.ALTAR
+		tower.at(pos).kind = Cell.Kind.PEDESTAL
 		pickups.append(Pickup.create(pos, _roll_upgrade()))
 		placed = pos
 	return placed
 
 
 func _place_letters(tower: TowerData, top_row: int, bottom_row: int,
-		taken: Dictionary, altar: Vector2i) -> void:
+		taken: Dictionary, pedestal: Vector2i) -> void:
 	for _i in Tuning.LETTERS_PER_SEGMENT:
-		var pos := _find_letter_spot(tower, top_row, bottom_row, taken, altar)
+		var pos := _find_letter_spot(tower, top_row, bottom_row, taken, pedestal)
 		if pos == NO_SPOT:
 			continue
 		taken[pos] = true
@@ -195,15 +195,15 @@ func _place_letters(tower: TowerData, top_row: int, bottom_row: int,
 
 
 func _find_letter_spot(tower: TowerData, top_row: int, bottom_row: int,
-		taken: Dictionary, altar: Vector2i) -> Vector2i:
+		taken: Dictionary, pedestal: Vector2i) -> Vector2i:
 	var gap: int = Tuning.LETTER_MIN_COL_GAP
-	var aimed := altar != NO_SPOT and gap * 2 <= cols
+	var aimed := pedestal != NO_SPOT and gap * 2 <= cols
 	for pass_index in 2:
 		var far := aimed and pass_index == 0
 		for _attempt in 24:
 			var col: int
 			if far:
-				col = tower.wrap_col(altar.x + _letter_rng.randi_range(gap, cols - gap))
+				col = tower.wrap_col(pedestal.x + _letter_rng.randi_range(gap, cols - gap))
 			else:
 				col = _letter_rng.randi_range(0, cols - 1)
 			var pos := Vector2i(col, _letter_rng.randi_range(top_row, bottom_row - 1))
@@ -412,7 +412,7 @@ func _flood_from_top(tower: TowerData) -> Dictionary:
 	var queue: Array[Vector2i] = []
 	for col in cols:
 		var start := Vector2i(col, 0)
-		if not tower.is_blocked(start):
+		if tower.player_can_stand(start):
 			reached[start] = true
 			queue.append(start)
 
