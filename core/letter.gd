@@ -16,14 +16,14 @@ func turns() -> int:
 
 
 const EXCUSES: Array[String] = [
-	"Detained on the upper floors. Begin without me.",
-	"The stairs are not where I left them.",
-	"A small matter of masonry. Very nearly resolved.",
-	"There was a gargoyle. It started it.",
-	"Held up by an errand both urgent and entirely genuine.",
-	"My aunt. You remember my aunt.",
-	"Cannot possibly explain in writing. Will explain in person.",
-	"The sun and I are having a disagreement. Pour another.",
+	"[excuse 1]",
+	"[excuse 2]",
+	"[excuse 3]",
+	"[excuse 4]",
+	"[excuse 5]",
+	"[excuse 6]",
+	"[excuse 7]",
+	"[excuse 8]",
 ]
 
 
