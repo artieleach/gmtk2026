@@ -10,11 +10,15 @@ const DIAGONALS := {
 	"down-left": Vector2i(-1, 1), "down-right": Vector2i(1, 1),
 }
 
-const OFFER_ACTIONS: Array[StringName] = ["offer_1", "offer_2", "offer_3"]
+const MENU_SCENE := preload("res://ui/menu.tscn")
+const HUD_SCENE := preload("res://ui/hud.tscn")
 
 var game: Game
 var tower_view: TowerView
 var backdrop_view: BackdropView
+var crown_view: CrownView
+var pickup_view: PickupView
+var letter_view: LetterView
 var actor_view: ActorView
 var barrier_view: BarrierView
 var hud: Hud
@@ -33,7 +37,7 @@ func _ready() -> void:
 	Settings.load_from()
 	Settings.apply()
 
-	menu = Menu.new()
+	menu = MENU_SCENE.instantiate() as Menu
 	menu.name = "Menu"
 	menu.play_pressed.connect(_on_play_pressed)
 	menu.resume_pressed.connect(_on_resume_pressed)
@@ -72,6 +76,26 @@ func _start_run() -> void:
 	backdrop_view.z_index = -1
 	tower_view.add_child(backdrop_view)
 
+	crown_view = CrownView.new()
+	crown_view.name = "CrownView"
+	crown_view.tower_view = tower_view
+	crown_view.z_index = 1
+	tower_view.add_child(crown_view)
+
+	pickup_view = PickupView.new()
+	pickup_view.name = "PickupView"
+	pickup_view.game = game
+	pickup_view.tower_view = tower_view
+	pickup_view.z_index = 1
+	tower_view.add_child(pickup_view)
+
+	letter_view = LetterView.new()
+	letter_view.name = "LetterView"
+	letter_view.game = game
+	letter_view.tower_view = tower_view
+	letter_view.z_index = 1
+	tower_view.add_child(letter_view)
+
 	actor_view = ActorView.new()
 	actor_view.name = "ActorView"
 	actor_view.game = game
@@ -86,7 +110,7 @@ func _start_run() -> void:
 	barrier_view.z_index = 2
 	tower_view.add_child(barrier_view)
 
-	hud = Hud.new()
+	hud = HUD_SCENE.instantiate() as Hud
 	hud.name = "Hud"
 	hud.game = game
 	_run.add_child(hud)
@@ -107,6 +131,9 @@ func _end_run() -> void:
 	game = null
 	tower_view = null
 	backdrop_view = null
+	crown_view = null
+	pickup_view = null
+	letter_view = null
 	actor_view = null
 	barrier_view = null
 	hud = null
@@ -121,7 +148,13 @@ func _on_play_pressed() -> void:
 	menu.close()
 	_set_paused(false)
 	music.play(MusicPlayer.GAME)
+
+	var first := not Settings.narration_played
 	_start_run()
+	sfx.narrate = first
+	if first:
+		Settings.narration_played = true
+		Settings.save_to()
 
 
 func _on_resume_pressed() -> void:
@@ -161,11 +194,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.is_action_pressed("debug_sun_back"):
 			game.debug_set_turn(game.turn - 1)
 			return
-
-	if game.pending_altar != null:
-		_reset_move_state()
-		_handle_altar(event)
-		return
 
 	if event.is_action_pressed("cancel"):
 		_reset_move_state()
@@ -221,14 +249,3 @@ func _perpendicular_held(dir: Vector2i) -> Vector2i:
 
 func _reset_move_state() -> void:
 	_held.clear()
-
-
-func _handle_altar(event: InputEvent) -> void:
-	var altar := game.pending_altar
-	for i in OFFER_ACTIONS.size():
-		if event.is_action_pressed(OFFER_ACTIONS[i]):
-			if i < altar.offers.size():
-				game.buy(altar, altar.offers[i])
-			return
-	if event.is_action_pressed("cancel"):
-		game.close_altar()

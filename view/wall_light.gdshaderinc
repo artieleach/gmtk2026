@@ -9,6 +9,8 @@ uniform vec2 wall_min;
 uniform vec2 wall_max;
 uniform vec2 grid_size;
 
+uniform float top_row = -0.5;
+
 uniform sampler2D bars_tex : filter_nearest, repeat_enable;
 
 const int BAR_TOP = 1;
@@ -182,7 +184,7 @@ bool lantern_lights(vec2 wall) {
 
 vec4 light_at(vec2 wall) {
 	vec4 result = vec4(0.0);
-	if (wall.y >= -0.5 && wall.y < grid_size.y - 0.5) {
+	if (wall.y >= top_row && wall.y < grid_size.y - 0.5) {
 		bool below_front = wall.y >= front_row;
 		bool shaded = shadow_margin(wall) >= 0.0;
 		result = below_front ? dark_color : (shaded ? shaded_color : lit_color);

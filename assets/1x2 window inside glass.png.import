@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bliye8o68t7qn"
-path="res://.godot/imported/Top.png-82310455ef1593ae707649e39644f4e5.ctex"
+uid="uid://ctlu656h51kuq"
+path="res://.godot/imported/1x2 window inside glass.png-57a3a68b7df0c56576758f3820e8b772.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/Top.png"
-dest_files=["res://.godot/imported/Top.png-82310455ef1593ae707649e39644f4e5.ctex"]
+source_file="res://assets/1x2 window inside glass.png"
+dest_files=["res://.godot/imported/1x2 window inside glass.png-57a3a68b7df0c56576758f3820e8b772.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

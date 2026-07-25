@@ -13,6 +13,11 @@ var blurb: String
 var kind: int
 var price: int
 var magnitude: int
+var duration: int
+
+
+func is_temporary() -> bool:
+	return duration > 0
 
 
 static var _table: Dictionary = {}
@@ -30,7 +35,8 @@ static func all_ids() -> Array:
 	return _table.keys()
 
 
-static func _make(id: int, display: String, blurb: String, kind: int, price: int, magnitude: int) -> Upgrade:
+static func _make(id: int, display: String, blurb: String, kind: int, price: int,
+		magnitude: int, duration: int = 0) -> Upgrade:
 	var u := Upgrade.new()
 	u.id = id
 	u.display = display
@@ -38,6 +44,7 @@ static func _make(id: int, display: String, blurb: String, kind: int, price: int
 	u.kind = kind
 	u.price = price
 	u.magnitude = magnitude
+	u.duration = duration
 	_table[id] = u
 	return u
 
@@ -50,16 +57,16 @@ static func _build_table() -> void:
 		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 1)
 
 	_make(Id.JUMP, "Plummet", "Drop straight down, stopped only by walls",
-		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 0)
+		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 0, Tuning.POWER_DURATION_TURNS)
 
 	_make(Id.CARVE, "Rend", "Smash the stone you climb into",
-		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 0)
+		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 0, Tuning.POWER_DURATION_TURNS)
 
 	_make(Id.RAPPEL, "Rappel", "Slide down a rib you cannot step past",
-		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 0)
+		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 0, Tuning.POWER_DURATION_TURNS)
 
 	_make(Id.SUREFOOT, "Surefoot", "Haul yourself up over an overhang",
-		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 0)
+		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 0, Tuning.POWER_DURATION_TURNS)
 
 	_make(Id.AMBUSH, "Ambush", "Hold still, then strike harder",
-		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 2)
+		Kind.PASSIVE, Tuning.UPGRADE_PRICE, 2, Tuning.POWER_DURATION_TURNS)

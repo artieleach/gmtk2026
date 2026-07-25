@@ -1,0 +1,31 @@
+[gd_resource type="Theme" format=3]
+
+[resource]
+default_font_size = 30
+Banner/base_type = &"Status"
+Banner/font_sizes/font_size = 64
+BannerLose/base_type = &"Banner"
+BannerLose/colors/font_color = Color(1, 0.6, 0.35, 1)
+BannerWin/base_type = &"Banner"
+BannerWin/colors/font_color = Color(0.7, 0.9, 1, 1)
+Button/colors/font_color = Color(0.92, 0.9, 0.82, 1)
+HBoxContainer/constants/separation = 16
+Heading/base_type = &"Label"
+Heading/colors/font_color = Color(1, 0.82, 0.72, 1)
+Heading/font_sizes/font_size = 44
+Kit/base_type = &"Status"
+Kit/font_sizes/font_size = 22
+Label/colors/font_color = Color(0.92, 0.9, 0.82, 1)
+Status/base_type = &"Label"
+Status/colors/font_shadow_color = Color(0, 0, 0, 0.8)
+Status/constants/shadow_offset_y = 2
+Status/font_sizes/font_size = 28
+StatusUrgent/base_type = &"Status"
+StatusUrgent/colors/font_color = Color(1, 0.45, 0.3, 1)
+Title/base_type = &"Label"
+Title/colors/font_color = Color(1, 0.82, 0.72, 1)
+Title/font_sizes/font_size = 72
+Toast/base_type = &"Status"
+Toast/colors/font_color = Color(1, 0.82, 0.72, 1)
+Toast/font_sizes/font_size = 34
+VBoxContainer/constants/separation = 14

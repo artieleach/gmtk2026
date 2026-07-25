@@ -7,20 +7,27 @@ const CARRY_EPSILON := 1e-6
 const MAX_CARVES := 512
 
 var rng := RandomNumberGenerator.new()
+var _letter_rng := RandomNumberGenerator.new()
+const LETTER_SEED_SALT := 0x1E77E2
 var segment_count: int
 var rows_per_segment: int
 var cols: int
 var enemy_scale: float = 1.0
 var spawns: Array[Dictionary] = []
-var altars: Array[Altar] = []
+var pickups: Array[Pickup] = []
+var letters: Array[Letter] = []
 var _creature_anchors: Array[Vector2i] = []
 var _altar_anchors: Array[Vector2i] = []
 var _carry: Dictionary = {}
+var route_start_face: int = 0
+var _route_bags: Dictionary = {}
+var carves: int = 0
 
 
 func _init(p_seed: int = Tuning.DEFAULT_SEED, p_segments: int = Tuning.SEGMENT_COUNT,
 		p_rows_per_segment: int = Tuning.ROWS_PER_SEGMENT, p_cols: int = Tuning.COLS) -> void:
 	rng.seed = p_seed
+	_letter_rng.seed = p_seed ^ LETTER_SEED_SALT
 	segment_count = p_segments
 	rows_per_segment = p_rows_per_segment
 	cols = p_cols
@@ -31,6 +38,9 @@ func build() -> TowerData:
 	var tower := TowerData.new(cols, segment_count * rows_per_segment)
 	_creature_anchors.clear()
 	_altar_anchors.clear()
+	_route_bags.clear()
+	carves = 0
+	route_start_face = rng.randi_range(0, Tuning.FACES - 1)
 	for index in segment_count:
 		_build_segment(tower, SegmentRecipe.for_depth(index, segment_count),
 			index * rows_per_segment)
@@ -52,35 +62,49 @@ func _build_segment(tower: TowerData, recipe: SegmentRecipe, top_row: int) -> vo
 	var room_row := top_row / Tuning.ROOM_H
 	while room_row * Tuning.ROOM_H < bottom_row:
 		var band := RoomTemplates.band_for(room_row, rooms_tall)
-		var pool := RoomTemplates.pool_for(band)
+		var route_face := RoomTemplates.route_face(room_row, route_start_face)
+		var wall_pool := RoomTemplates.wall_pool_for(band)
 		for face in Tuning.FACES:
-			var rows: Array = pool[rng.randi_range(0, pool.size() - 1)]
-			if rng.randi_range(0, 1) == 1:
-				rows = RoomTemplates.mirrored(rows)
-			_stamp_room(tower, rows, face * Tuning.ROOM_W, room_row * Tuning.ROOM_H)
+			var room: Dictionary
+			if face == route_face:
+				room = _take_route_room(band)
+			else:
+				room = wall_pool[rng.randi_range(0, wall_pool.size() - 1)]
+				if rng.randi_range(0, 1) == 1:
+					room = RoomTemplates.mirrored(room)
+			_stamp_room(tower, room, face * Tuning.ROOM_W, room_row * Tuning.ROOM_H)
 		room_row += 1
 
 
-func _stamp_room(tower: TowerData, rows: Array, left_col: int, top_row: int) -> void:
-	for y in rows.size():
-		var line: String = rows[y]
+func _take_route_room(band: int) -> Dictionary:
+	var bag: Array = _route_bags.get(band, [])
+	if bag.is_empty():
+		bag = RoomTemplates.route_pool_for(band).duplicate()
+		_route_bags[band] = bag
+	var index := rng.randi_range(0, bag.size() - 1)
+	var room: Dictionary = bag[index]
+	bag.remove_at(index)
+	return room
+
+
+func _stamp_room(tower: TowerData, room: Dictionary, left_col: int, top_row: int) -> void:
+	var walls: Array = room["walls"]
+	var objects: Array = room["objects"]
+	for y in objects.size():
+		var line: String = objects[y]
 		var row := top_row + y
 		if row >= tower.rows:
 			return
 		for x in line.length():
 			var pos := Vector2i(tower.wrap_col(left_col + x), row)
-			var spec := RoomTemplates.cell_for(line[x])
-			var cell := tower.at(pos)
-			if spec["kind"] != -1:
-				cell.kind = spec["kind"]
-			cell.bars = RoomTemplates.bars_at(rows, x, y)
-			if RoomTemplates.is_window_origin(rows, x, y):
+			var anchor := RoomTemplates.apply_cell(tower, pos, walls, objects, x, y)
+			if RoomTemplates.is_window_origin(objects, x, y):
 				tower.windows.append({
 					"origin": pos,
 					"size": RoomTemplates.window_size(line[x]),
 					"open": false,
 				})
-			match spec["anchor"]:
+			match anchor:
 				"creature":
 					_creature_anchors.append(pos)
 				"altar":
@@ -103,7 +127,7 @@ func _ruin(tower: TowerData) -> void:
 
 func _can_ruin(cell: Cell) -> bool:
 	return cell != null and cell.bars == 0 and not cell.blocked \
-		and cell.kind != Cell.Kind.WINDOW
+		and cell.kind != Cell.Kind.WINDOW and not cell.route
 
 
 func _grow_rubble_cluster(tower: TowerData, seed: Vector2i) -> void:
@@ -131,7 +155,8 @@ func _lay_rubble(tower: TowerData, pos: Vector2i) -> void:
 
 func _populate(tower: TowerData) -> void:
 	spawns.clear()
-	altars.clear()
+	pickups.clear()
+	letters.clear()
 	_carry.clear()
 	var taken: Dictionary = {}
 	for index in segment_count:
@@ -139,11 +164,14 @@ func _populate(tower: TowerData) -> void:
 		var top_row: int = index * rows_per_segment
 		var bottom_row: int = mini(top_row + rows_per_segment, tower.rows)
 		_populate_segment(tower, recipe, top_row, bottom_row, index, taken)
-		_place_altars(tower, top_row, bottom_row, taken)
+		var altar := _place_pickups(tower, top_row, bottom_row, taken)
+		_place_letters(tower, top_row, bottom_row, taken, altar)
 
 
-func _place_altars(tower: TowerData, top_row: int, bottom_row: int, taken: Dictionary) -> void:
-	for _i in Tuning.ALTARS_PER_SEGMENT:
+func _place_pickups(tower: TowerData, top_row: int, bottom_row: int,
+		taken: Dictionary) -> Vector2i:
+	var placed := NO_SPOT
+	for _i in Tuning.PICKUPS_PER_SEGMENT:
 		var pos := _take_anchor(_altar_anchors, tower, top_row, bottom_row, taken, Terrain.BARE)
 		if pos == NO_SPOT:
 			pos = _find_spot(tower, top_row, bottom_row, taken, Terrain.BARE)
@@ -151,15 +179,46 @@ func _place_altars(tower: TowerData, top_row: int, bottom_row: int, taken: Dicti
 			continue
 		taken[pos] = true
 		tower.at(pos).kind = Cell.Kind.ALTAR
-		altars.append(Altar.create(pos, _roll_offers()))
+		pickups.append(Pickup.create(pos, _roll_upgrade()))
+		placed = pos
+	return placed
 
 
-func _roll_offers() -> Array[int]:
-	var pool: Array = Upgrade.all_ids().duplicate()
-	var offers: Array[int] = []
-	for _i in mini(Tuning.ALTAR_OFFERS, pool.size()):
-		offers.append(pool.pop_at(rng.randi_range(0, pool.size() - 1)))
-	return offers
+func _place_letters(tower: TowerData, top_row: int, bottom_row: int,
+		taken: Dictionary, altar: Vector2i) -> void:
+	for _i in Tuning.LETTERS_PER_SEGMENT:
+		var pos := _find_letter_spot(tower, top_row, bottom_row, taken, altar)
+		if pos == NO_SPOT:
+			continue
+		taken[pos] = true
+		letters.append(Letter.create(pos))
+
+
+func _find_letter_spot(tower: TowerData, top_row: int, bottom_row: int,
+		taken: Dictionary, altar: Vector2i) -> Vector2i:
+	var gap: int = Tuning.LETTER_MIN_COL_GAP
+	var aimed := altar != NO_SPOT and gap * 2 <= cols
+	for pass_index in 2:
+		var far := aimed and pass_index == 0
+		for _attempt in 24:
+			var col: int
+			if far:
+				col = tower.wrap_col(altar.x + _letter_rng.randi_range(gap, cols - gap))
+			else:
+				col = _letter_rng.randi_range(0, cols - 1)
+			var pos := Vector2i(col, _letter_rng.randi_range(top_row, bottom_row - 1))
+			if not _suits(tower, pos, Terrain.BARE):
+				continue
+			if _is_spawnable(tower, pos, taken) and tower.player_can_stand(pos):
+				return pos
+		if not far:
+			break
+	return NO_SPOT
+
+
+func _roll_upgrade() -> int:
+	var ids: Array = Upgrade.all_ids()
+	return ids[rng.randi_range(0, ids.size() - 1)]
 
 
 func _populate_segment(tower: TowerData, recipe: SegmentRecipe, top_row: int,
@@ -208,6 +267,9 @@ func _populate_segment(tower: TowerData, recipe: SegmentRecipe, top_row: int,
 
 func _place_nest(tower: TowerData, top_row: int, bottom_row: int, taken: Dictionary) -> void:
 	var anchor := _find_spot(tower, top_row, bottom_row, taken)
+	while anchor != NO_SPOT and tower.at(anchor).route:
+		taken[anchor] = true
+		anchor = _find_spot(tower, top_row, bottom_row, taken)
 	if anchor == NO_SPOT:
 		return
 	_place(tower, anchor, Species.Id.NEST, 0, taken)
@@ -244,7 +306,7 @@ func _suits(tower: TowerData, pos: Vector2i, terrain: int) -> bool:
 		Terrain.BARRIER:
 			return tower.at(pos).casts_shadow()
 		Terrain.BARE:
-			return not tower.at(pos).casts_shadow()
+			return not tower.at(pos).casts_shadow() and not tower.at(pos).route
 		_:
 			return true
 
@@ -336,10 +398,13 @@ func _ensure_descendable(tower: TowerData) -> void:
 	for _attempt in MAX_CARVES:
 		var reached := _flood_from_top(tower)
 		if _deepest_row(reached) >= tower.rows - 1:
+			if carves > 0:
+				push_error("TowerBuilder: opened %d cell(s) to force a descent  the room pool is broken, not the seed" % carves)
 			return
 		if not _carve_one(tower, reached):
+			push_error("TowerBuilder: no way down and nothing left to open at row %d" % _deepest_row(reached))
 			return
-	push_warning("TowerBuilder: gave up forcing a descent route after %d carves" % MAX_CARVES)
+	push_error("TowerBuilder: gave up forcing a descent route after %d carves" % MAX_CARVES)
 
 
 func _flood_from_top(tower: TowerData) -> Dictionary:
@@ -394,5 +459,19 @@ func _carve_one(tower: TowerData, reached: Dictionary) -> bool:
 	var victim := rubble if rubble.x >= 0 else stone
 	if victim.x < 0:
 		return false
-	_open_cell(tower, victim)
+	carves += 1
+	if victim == rubble:
+		_open_cell(tower, victim)
+	else:
+		_open_crossing(tower, victim)
 	return true
+
+
+func _open_crossing(tower: TowerData, pos: Vector2i) -> void:
+	var cell := tower.at(pos)
+	if cell == null:
+		return
+	cell.bars &= ~Cell.BAR_TOP
+	var above := tower.at(pos + Vector2i(0, -1))
+	if above != null:
+		above.bars &= ~Cell.BAR_BOTTOM

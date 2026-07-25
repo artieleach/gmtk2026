@@ -19,6 +19,7 @@ const BAR_LEFT := 8
 var blocked: bool = false
 var kind: int = Kind.WALL
 var bars: int = 0
+var route: bool = false
 
 
 func casts_shadow() -> bool:

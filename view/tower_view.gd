@@ -25,8 +25,9 @@ const TILE_GAP := 2.0
 
 const WINDOW_TEXTURE_PATHS := {
 	Vector2i(1, 2): {
-		"closed": "res://assets/1x2 window closed.png",
-		"open": "res://assets/1x2 window open.png",
+		"frame": "res://assets/1x2 window open frame.png",
+		"open": "res://assets/1x2 window inside black.png",
+		"closed": "res://assets/1x2 window inside glass.png",
 	},
 	Vector2i(3, 5): {
 		"closed": "res://assets/5x3 Window close.png",
@@ -54,6 +55,7 @@ var _bars_texture: ImageTexture
 var _bars_image: Image
 var _light_rects: Array[ColorRect] = []
 var _window_textures: Dictionary = {}
+var _window_interiors: Node2D
 var _level_textures: Array[Texture2D] = []
 var _level_rows: int = 0
 
@@ -62,22 +64,28 @@ func _ready() -> void:
 	for size: Vector2i in WINDOW_TEXTURE_PATHS:
 		var paths: Dictionary = WINDOW_TEXTURE_PATHS[size]
 		_window_textures[size] = {
+			"frame": load(paths["frame"]) if paths.has("frame") else null,
 			"open": load(paths["open"]),
 			"closed": load(paths["closed"]),
 		}
 	for path in LEVEL_PATHS:
 		_level_textures.append(load(path))
 	if not _level_textures.is_empty():
-		var level: Texture2D = _level_textures[0]
-		_level_rows = int(round(float(level.get_height()) * float(Tuning.COLS_PER_FACE)
-			/ float(level.get_width())))
+		_level_rows = rows_of(_level_textures[0], Tuning.COLS_PER_FACE)
 
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 
 	_build_light_rects()
+	_build_interior_layer()
 	if game != null:
 		game.run_started.connect(_on_run_started)
 		game.tower_changed.connect(_on_tower_changed)
+
+
+static func rows_of(tex: Texture2D, cells_wide: int) -> int:
+	if tex == null or tex.get_width() <= 0:
+		return 0
+	return int(round(float(tex.get_height()) * float(cells_wide) / float(tex.get_width())))
 
 
 func _build_light_rects() -> void:
@@ -92,6 +100,14 @@ func _build_light_rects() -> void:
 		rect.material = material
 		add_child(rect)
 		_light_rects.append(rect)
+
+
+func _build_interior_layer() -> void:
+	_window_interiors = Node2D.new()
+	_window_interiors.name = "WindowInteriors"
+	_window_interiors.z_index = 1
+	_window_interiors.draw.connect(_draw_window_interiors)
+	add_child(_window_interiors)
 
 
 func _on_run_started() -> void:
@@ -130,6 +146,8 @@ func _process(delta: float) -> void:
 		_track_player(delta)
 	_update_light_rects()
 	queue_redraw()
+	if _window_interiors != null:
+		_window_interiors.queue_redraw()
 
 
 func _ease_sun(delta: float) -> void:
@@ -166,13 +184,15 @@ func sun_turn() -> float:
 	return _sun_turn
 
 
+func row_top_y(row: float) -> float:
+	return origin().y + (row - 0.5 - _camera_row) * Tuning.TILE_H
+
+
 func cell_rect(pos: Vector2i) -> Rect2:
 	var col := game.tower.wrap_col(pos.x)
 	var width := proj.column_width(proj.face_of(col))
-	var centre := origin() + Vector2(
-		proj.column_center_x(col),
-		(float(pos.y) - _camera_row) * Tuning.TILE_H)
-	return Rect2(centre - Vector2(width, Tuning.TILE_H) * 0.5, Vector2(width, Tuning.TILE_H))
+	var x := origin().x + proj.column_center_x(col)
+	return Rect2(x - width * 0.5, row_top_y(float(pos.y)), width, Tuning.TILE_H)
 
 
 func is_cell_visible(pos: Vector2i) -> bool:
@@ -221,14 +241,30 @@ func face_light_uniforms(face: int) -> Dictionary:
 	if right - left < 1.0:
 		return {}
 
-	var viewport := get_viewport_rect().size
-	var v_top := _camera_row - base.y / Tuning.TILE_H
-	var v_bottom := _camera_row + (viewport.y - base.y) / Tuning.TILE_H
+	var rows := screen_rows()
 	return {
-		"wall_min": Vector2(float(face * cpf) - 0.5, v_top),
-		"wall_max": Vector2(float(face * cpf + cpf) - 0.5, v_bottom),
+		"wall_min": Vector2(float(face * cpf) - 0.5, rows.x),
+		"wall_max": Vector2(float(face * cpf + cpf) - 0.5, rows.y),
 		"face_shade": lerpf(EDGE_SHADE, 1.0, proj.face_facing(face)),
-		"screen_x_span": Vector2(left, right) / viewport.x,
+		"screen_x_span": Vector2(left, right) / get_viewport_rect().size.x,
+	}
+
+
+func screen_rows() -> Vector2:
+	var base := origin()
+	return Vector2(
+		_camera_row - base.y / Tuning.TILE_H,
+		_camera_row + (get_viewport_rect().size.y - base.y) / Tuning.TILE_H)
+
+
+func crown_light_uniforms(top_row: float) -> Dictionary:
+	var rows := screen_rows()
+	return {
+		"wall_min": Vector2(0.0, rows.x),
+		"wall_max": Vector2(0.0, rows.y),
+		"face_shade": 1.0,
+		"screen_x_span": Vector2(0.0, 1.0),
+		"top_row": top_row,
 	}
 
 
@@ -294,12 +330,41 @@ func _draw_windows(first_row: int, last_row: int) -> void:
 		if not is_cell_visible(origin):
 			continue
 		var art: Dictionary = _window_textures.get(size, {})
+		var frame: Texture2D = art.get("frame")
+		var tex: Texture2D = frame if frame != null else art.get("open" if window["open"] else "closed")
+		if tex == null:
+			continue
+		draw_texture_rect(tex, _window_rect(origin, size), false)
+
+
+func _draw_window_interiors() -> void:
+	if game == null or game.tower == null:
+		return
+	var rows := screen_rows()
+	var first_row := int(floor(rows.x)) - 1
+	var last_row := int(ceil(rows.y)) + 1
+	for window in game.tower.windows:
+		var origin: Vector2i = window["origin"]
+		var size: Vector2i = window["size"]
+		if origin.y + size.y - 1 < first_row or origin.y > last_row:
+			continue
+		if not is_cell_visible(origin):
+			continue
+		var art: Dictionary = _window_textures.get(size, {})
+		if art.get("frame") == null:
+			continue
 		var tex: Texture2D = art.get("open" if window["open"] else "closed")
 		if tex == null:
 			continue
-		var top_left := cell_rect(origin)
-		var bottom_right := cell_rect(origin + size - Vector2i.ONE)
-		draw_texture_rect(tex, Rect2(top_left.position, bottom_right.end - top_left.position), false)
+		var shade := cell_shade(origin)
+		_window_interiors.draw_texture_rect(
+			tex, _window_rect(origin, size), false, Color(shade, shade, shade))
+
+
+func _window_rect(origin: Vector2i, size: Vector2i) -> Rect2:
+	var top_left := cell_rect(origin)
+	var bottom_right := cell_rect(origin + size - Vector2i.ONE)
+	return Rect2(top_left.position, bottom_right.end - top_left.position)
 
 
 func _draw_face(face: int, base: Vector2, first_row: int, last_row: int) -> void:

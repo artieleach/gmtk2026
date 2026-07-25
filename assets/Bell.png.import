@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b3wl50172ekip"
-path="res://.godot/imported/1Towers.png-8bc6e6f39ff584f85abc0c5c2eaae177.ctex"
+uid="uid://gxy0r761w2y7"
+path="res://.godot/imported/Bell.png-5bf6c4dfdcb7e139a7ef6199053be4ed.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/parralax/1Towers.png"
-dest_files=["res://.godot/imported/1Towers.png-8bc6e6f39ff584f85abc0c5c2eaae177.ctex"]
+source_file="res://assets/Bell.png"
+dest_files=["res://.godot/imported/Bell.png-5bf6c4dfdcb7e139a7ef6199053be4ed.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

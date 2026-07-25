@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6384 18250">
+  <g transform="translate(200,100) scale(2)">
+    <path style="fill:#7a0812;fill-opacity:1" d="m 100,4000 a 500 500 0 011 800 0 l 0,4000 -800,0 z"/>
+    <path style="fill:#8b0d12" d="M 1500,4000 Q 1800,3200 2100,4000 T 2700,4000 L 2700,8000 1500,8000 Z"/>
+  </g>
+  <rect x="4000" y="6000" width="900" height="7000" fill="rgb(160,16,16)"/>
+</svg>

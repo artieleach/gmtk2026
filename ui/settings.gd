@@ -8,6 +8,7 @@ const BUSES := ["Master", "Music", "SFX"]
 
 static var volumes := {"Master": 1.0, "Music": 1.0, "SFX": 1.0}
 static var fullscreen := false
+static var narration_played := false
 
 
 static func load_from(path: String = PATH) -> void:
@@ -17,6 +18,7 @@ static func load_from(path: String = PATH) -> void:
 	for bus in BUSES:
 		volumes[bus] = clampf(float(config.get_value(SECTION, _volume_key(bus), 1.0)), 0.0, 1.0)
 	fullscreen = bool(config.get_value(SECTION, "fullscreen", false))
+	narration_played = bool(config.get_value(SECTION, "narration_played", false))
 
 
 static func save_to(path: String = PATH) -> void:
@@ -24,6 +26,7 @@ static func save_to(path: String = PATH) -> void:
 	for bus in BUSES:
 		config.set_value(SECTION, _volume_key(bus), volumes[bus])
 	config.set_value(SECTION, "fullscreen", fullscreen)
+	config.set_value(SECTION, "narration_played", narration_played)
 	config.save(path)
 
 

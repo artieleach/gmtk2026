@@ -11,8 +11,9 @@ signal actor_spawned(actor: Actor)
 signal enemy_telegraphed(actor: Actor)
 signal actor_attacked(attacker: Actor, target: Actor)
 signal tower_changed(pos: Vector2i)
-signal altar_opened(altar: Altar)
-signal altar_closed()
+signal upgrade_picked(pickup: Pickup, gained: bool)
+signal upgrade_lapsed(upgrade_id: int)
+signal letter_sent(letter: Letter, index: int, turns_gained: int)
 
 var tower: TowerData
 var sun: SunModel
@@ -30,8 +31,9 @@ var enemies_enabled: bool = true
 var enemy_scale: float = 1.0
 
 var enemy_turn: EnemyTurn
-var altars: Array[Altar] = []
-var pending_altar: Altar = null
+var pickups: Array[Pickup] = []
+var letters: Array[Letter] = []
+var _letters_sent: int = 0
 
 
 var player: Actor:
@@ -55,8 +57,9 @@ func start(p_seed: int = Tuning.DEFAULT_SEED) -> void:
 	hero.pos = _spawn_position()
 	hero.loadout = Loadout.new()
 	actors = [hero]
-	altars = builder.altars
-	pending_altar = null
+	pickups = builder.pickups
+	letters = builder.letters
+	_letters_sent = 0
 	if enemies_enabled:
 		_spawn_enemies(builder.spawns, hero.pos)
 
@@ -79,6 +82,11 @@ func _spawn_enemies(spawns: Array, player_pos: Vector2i) -> void:
 
 
 func _spawn_position() -> Vector2i:
+	for col in tower.cols:
+		var candidate := Vector2i(col, 0)
+		var cell: Cell = tower.at(candidate)
+		if cell != null and cell.route and tower.player_can_stand(candidate):
+			return candidate
 	for col in tower.cols_per_face:
 		var candidate := Vector2i(col, 0)
 		if tower.player_can_stand(candidate):
@@ -92,7 +100,7 @@ func _spawn_position() -> Vector2i:
 
 
 func try_move(dir: Vector2i) -> bool:
-	if not running or pending_altar != null or player == null:
+	if not running or player == null:
 		return false
 	var target := tower.wrap_pos(player.pos + dir)
 	if not tower.in_bounds(target):
@@ -148,7 +156,8 @@ func _move_player_to(dest: Vector2i) -> bool:
 	player.pos = dest
 	actor_moved.emit(player, from, dest)
 	advance_turn()
-	_check_altar()
+	_check_pickup()
+	_check_letter()
 	return true
 
 
@@ -175,14 +184,39 @@ func _break_cell(pos: Vector2i) -> void:
 	advance_turn()
 
 
-func _check_altar() -> void:
+func _check_pickup() -> void:
+	if not running or player == null or player.loadout == null:
+		return
+	var pickup := pickup_at(player.pos)
+	if pickup == null:
+		return
+	var upgrade := Upgrade.of(pickup.upgrade_id)
+	if not player.loadout.gains_from(upgrade):
+		pickup.taken = true
+		upgrade_picked.emit(pickup, false)
+		return
+	if not can_afford(pickup):
+		return
+	player.hp -= pickup.price()
+	player.loadout.buy(upgrade)
+	pickup.taken = true
+	hp_changed.emit(player, player.hp)
+	upgrade_picked.emit(pickup, true)
+
+
+func _check_letter() -> void:
 	if not running or player == null:
 		return
-	var altar := altar_at(player.pos)
-	if altar == null:
+	var letter := letter_at(player.pos)
+	if letter == null:
 		return
-	pending_altar = altar
-	altar_opened.emit(altar)
+	letter.sent = true
+	var index := _letters_sent
+	_letters_sent += 1
+	sun.dawn_turns += letter.turns()
+	rebind_light()
+	letter_sent.emit(letter, index, letter.turns())
+	turn_advanced.emit(turn)
 
 
 func _player_attack(target: Actor) -> void:
@@ -245,37 +279,28 @@ func attack_power() -> int:
 	return player_damage + player.loadout.strength() + player.loadout.ambush_bonus()
 
 
-func altar_at(pos: Vector2i) -> Altar:
+func pickup_at(pos: Vector2i) -> Pickup:
 	var wrapped := tower.wrap_pos(pos)
-	for altar in altars:
-		if altar.pos == wrapped and not altar.spent:
-			return altar
+	for pickup in pickups:
+		if pickup.pos == wrapped and not pickup.taken:
+			return pickup
 	return null
 
 
-func can_afford(altar: Altar) -> bool:
-	return player != null and player.hp - altar.price() >= 1
+func can_afford(pickup: Pickup) -> bool:
+	return player != null and player.hp - pickup.price() >= 1
 
 
-func buy(altar: Altar, upgrade_id: int) -> bool:
-	if altar == null or altar.spent or not altar.offers.has(upgrade_id):
-		return false
-	if not can_afford(altar):
-		return false
-	player.hp -= altar.price()
-	player.loadout.buy(Upgrade.of(upgrade_id))
-	altar.spent = true
-	pending_altar = null
-	hp_changed.emit(player, player.hp)
-	altar_closed.emit()
-	return true
+func letter_at(pos: Vector2i) -> Letter:
+	var wrapped := tower.wrap_pos(pos)
+	for letter in letters:
+		if letter.pos == wrapped and not letter.sent:
+			return letter
+	return null
 
 
-func close_altar() -> void:
-	if pending_altar == null:
-		return
-	pending_altar = null
-	altar_closed.emit()
+func letters_sent() -> int:
+	return _letters_sent
 
 
 func actor_at(pos: Vector2i) -> Actor:
@@ -287,7 +312,7 @@ func actor_at(pos: Vector2i) -> Actor:
 
 
 func wait_turn() -> bool:
-	if not running or pending_altar != null:
+	if not running:
 		return false
 	advance_turn()
 	if player != null and player.loadout != null:
@@ -299,6 +324,8 @@ func advance_turn() -> void:
 	turn += 1
 	rebind_light()
 
+	_expire_powers()
+
 	if enemies_enabled and enemy_turn != null:
 		enemy_turn.run()
 		rebind_light()
@@ -308,6 +335,13 @@ func advance_turn() -> void:
 
 	turn_advanced.emit(turn)
 	_check_end_conditions()
+
+
+func _expire_powers() -> void:
+	if player == null or player.loadout == null:
+		return
+	for id: int in player.loadout.tick(turn):
+		upgrade_lapsed.emit(id)
 
 
 func _apply_light(actor: Actor) -> void:

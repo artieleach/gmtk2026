@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dqs40d43fccuf"
-path="res://.godot/imported/3Caths.png-4d0e3a583ba23bb07bf5d67ef217cc08.ctex"
+uid="uid://bjgdwyvqjg4hq"
+path="res://.godot/imported/1x2 window inside glass frame.png-1d703fc4f0ce400cb886c189f217325d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/parralax/3Caths.png"
-dest_files=["res://.godot/imported/3Caths.png-4d0e3a583ba23bb07bf5d67ef217cc08.ctex"]
+source_file="res://assets/1x2 window inside glass frame.png"
+dest_files=["res://.godot/imported/1x2 window inside glass frame.png-1d703fc4f0ce400cb886c189f217325d.ctex"]
 
 [params]
 

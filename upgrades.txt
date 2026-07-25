@@ -1,0 +1,190 @@
+======================================================================
+UPGRADES
+======================================================================
+
+Seven upgrades, all passive, all picked up off the wall with blood.
+Two are KEPT for the run; the other five are BORROWED for 40 turns.
+
+HOW THE ECONOMY WORKS
+---------------------
+  * HP is the only currency. An upgrade costs a flat 2 HP -- the same
+    price for all seven. There are no tiers, no rarities, and no
+    prerequisites.
+  * A purchase can never take you below 1 HP, so a pickup can never
+    kill you. It can only leave you somewhere you have to recover from.
+  * Each upgrade is a pickup placed on the wall with its own sprite.
+    Walking onto its cell takes it -- no pause, no menu. A lower-third
+    pop-up names what you got and what it does, and (on your first run
+    only) a narrator explains it.
+  * Stepping onto a pickup you cannot afford leaves it standing, so you
+    can feed and come back. Stepping onto one that would do nothing --
+    Grace already capped -- absorbs it for free rather than charging
+    2 HP for nothing. That is the only case left: a duplicate of a
+    temporary power pays full price and buys a fresh 40 turns, because
+    the one you are carrying is running out either way.
+  * One pickup per segment, eight segments, each a single upgrade drawn
+    at random from the seven (duplicates allowed) -- deliberately more
+    blood asked than a single run can afford. The shortfall is the point.
+  * Kills pay 2-6 blood, so one guard or mason funds two upgrades.
+
+KEPT vs BORROWED
+----------------
+  * KEPT (no clock): Strength, Grace.
+  * BORROWED (40 turns from the moment you take it): Plummet, Rend,
+    Rappel, Surefoot, Ambush.
+
+Strength and Grace answer the two things that are true for the WHOLE
+descent -- the fight and the sun -- so paying blood for them is an
+investment in the run. The other five change what one piece of WALL
+does, and a wall you cannot climb past is a local problem. They are a
+key, not a tool: take one near the thing it opens, or waste it.
+
+40 turns against a 200-turn night, with a pickup roughly every 25 turns.
+A player who takes every pickup carries one or two powers at a time and
+never the full set -- which is the point, since owning all five at once
+turns the wall's four refusals into no refusals at all. It is also
+comfortably longer than the walk to the next pickup, so a power taken on
+the way down is still running when the wall asks for it.
+
+The clock counts turns, not uses. Resting in shade burns it just as
+descending does, which is what makes an early detour for a power a real
+cost rather than a free stockpile. When it runs out the power is simply
+gone -- the wall goes back to refusing what it refused before -- and the
+pop-up says so, because a power that vanishes silently is
+indistinguishable from one that never worked. The HUD shows the turns
+left on everything you are carrying.
+
+HOW THEY STACK
+--------------
+  * Strength stacks linearly, without a cap, and keeps it.
+  * Grace stacks, but is hard-capped at 2 free steps, and keeps it.
+  * Ambush stacks linearly (+2 each), but on one shared clock: a second
+    purchase doubles the damage and REFRESHES the 40 turns rather than
+    extending them. Hoarding duplicates of one power is never the best
+    use of a run's blood.
+  * Plummet, Rend, Rappel and Surefoot are owned/not-owned while their
+    clock runs. A second purchase re-arms the clock and nothing else.
+
+The four contextual abilities never contend with each other -- each
+answers a different press, and no single press can be barred two ways
+at once:
+
+    press DOWN, barred     -> Plummet
+    press SIDEWAYS, barred -> Rappel
+    press UP, barred       -> Surefoot
+    anything else barred   -> Rend
+
+
+======================================================================
+THE SEVEN
+======================================================================
+
+STRENGTH -- "Strength"
+  Blurb : +1 damage per bite
+  Cost  : 2 HP
+  Effect: Each purchase adds +1 to bite damage, on top of the base 2.
+          Stacks linearly with no cap. Combines with a banked Ambush.
+
+
+GRACE -- "Grace"
+  Blurb : +1 free step in sunlight, refilled by shade
+  Cost  : 2 HP
+  Effect: Gives a pool of free steps that absorb the sun. Standing in
+          sunlight spends one instead of burning you; only when the
+          pool is empty does the burn land.
+          The pool refills to full on any turn that ends in shade or
+          darkness -- so it is a rhythm (short deliberate hops through
+          the light), not a battery you drain once.
+          Buying it fills the pool immediately, so the steps you just
+          paid for are usable without finding shade first.
+          Each purchase is +1 step, but the pool is HARD-CAPPED AT 2
+          however many times you buy it. A third purchase is wasted.
+          (The cap exists because Grace is the only upgrade that
+          answers the sun directly; uncapped, it is just immunity to
+          the thing the game is about.)
+
+
+PLUMMET -- "Plummet"
+  Blurb : Drop straight down, stopped only by walls
+  Cost  : 2 HP
+  Effect: Pressing DOWN over an overhang, into a cell that isn't
+          solid, drops you straight down instead of refusing the step.
+          You fall past ledges and open wall alike and stop at the
+          first thing solid -- rubble, a window, a creature, or the
+          tower's foot.
+          Rubble below counts as wall, not gap, so a fall never starts
+          through one.
+          Costs a single turn no matter how far you fall.
+          Owned/not-owned, and TEMPORARY: 40 turns, refreshed (not
+          extended) by a second purchase.
+
+
+REND -- "Rend"
+  Blurb : Smash the stone you climb into
+  Cost  : 2 HP
+  Effect: Climbing into stone smashes it rather than being refused.
+          Breaks rubble and barriers alike -- anything the step was
+          refused for -- so long as the obstruction is in the cell you
+          are trying to ENTER.
+          A lip carried by the cell you are STANDING on is not
+          smashed: you can't get a swing at the stone under your own
+          feet. That's what leaves Surefoot a job.
+          Windows are never smashed. A window is an opening you pass
+          by, not stone to break, and it is the one thing on the wall
+          Rend will not open.
+          Costs a turn and DOES NOT MOVE YOU -- you clear the way, then
+          step through on a later turn.
+          Can destroy shade you wanted. That's on you.
+          Owned/not-owned, and TEMPORARY: 40 turns, refreshed (not
+          extended) by a second purchase.
+
+
+RAPPEL -- "Rappel"
+  Blurb : Slide down a rib you cannot step past
+  Cost  : 2 HP
+  Effect: A rib bars the way across. Owning this turns that refusal
+          into a slide down its face.
+          You do NOT cross the rib -- you end up below it, at the same
+          landing Plummet would find.
+          Plummet's standing-up mirror: the same fall, started by the
+          obstacle that stands up rather than sticks out.
+          Owned/not-owned, and TEMPORARY: 40 turns, refreshed (not
+          extended) by a second purchase.
+
+
+SUREFOOT -- "Surefoot"
+  Blurb : Haul yourself up over an overhang
+  Cost  : 2 HP
+  Effect: A lid bars the way UP off a ledge exactly as it bars the way
+          down onto one, and Plummet only ever answered the downward
+          half. This hauls you up over it, one cell.
+          There has to be somewhere to stand once you are up: never
+          rubble, and never a window (an opening, not a ledge).
+          Turns a course of barriers into something climbable instead
+          of a one-way valve.
+          Owned/not-owned, and TEMPORARY: 40 turns, refreshed (not
+          extended) by a second purchase.
+
+
+AMBUSH -- "Ambush"
+  Blurb : Hold still, then strike harder
+  Cost  : 2 HP
+  Effect: Each purchase adds +2 damage to your next bite -- but only
+          as a single armed charge.
+          Waiting arms it. The charge is armed AFTER the turn
+          resolves, so it belongs to your next action rather than to
+          the enemy phase you just sat through.
+          Moving, biting, or rending all clear it.
+          Standing still longer never banks more: it is a flag, not a
+          counter. The magnitude stacks with purchases (+2 each), the
+          charge does not.
+          TEMPORARY: 40 turns, and the banked charge lapses with it.
+          Temporary rather than kept, though it is damage like Strength
+          is, because a stack of it is worth having only where there is
+          something to bite -- it answers a fight in front of you, not
+          fighting in general.
+          (Anything that paid you to keep standing still would rebuild
+          the permanent safe camp the daybreak rule exists to prevent.)
+          The only upgrade that answers the game's other verb. Every
+          other one is paid out for moving; this one is paid out for
+          not.

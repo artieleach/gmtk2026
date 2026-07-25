@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6384 18250">
+  <!-- same winding both rings: a hole ONLY under evenodd -->
+  <path fill-rule="evenodd" d="M500,5000 L3000,5000 L3000,12000 L500,12000 Z M1000,6000 L2200,6000 L2200,10000 L1000,10000 Z" fill="#7A0812"/>
+  <!-- identical geometry, default nonzero: must stay solid -->
+  <path d="M3500,5000 L6000,5000 L6000,12000 L3500,12000 Z M4000,6000 L5200,6000 L5200,10000 L4000,10000 Z" fill="#8B0D12"/>
+</svg>
