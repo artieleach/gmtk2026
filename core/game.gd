@@ -140,8 +140,8 @@ func _try_contextual(dir: Vector2i, target: Vector2i) -> bool:
 
 	var cell: Cell = tower.at(target)
 	if player.loadout.has(Upgrade.Id.CARVE) and cell != null \
-			and cell.kind != Cell.Kind.WINDOW and (cell.blocked or cell.bars != 0):
-		_break_cell(target)
+			and cell.kind != Cell.Kind.WINDOW and _rendable(dir, target):
+		_break_cell(dir, target)
 		return true
 
 	return false
@@ -171,13 +171,31 @@ func drop_landing() -> Vector2i:
 	return landing
 
 
-func _break_cell(pos: Vector2i) -> void:
+func _rendable(dir: Vector2i, target: Vector2i) -> bool:
+	var cell: Cell = tower.at(target)
+	if cell == null:
+		return false
+	if cell.blocked:
+		return true
+	var flag := Cell.bar_for(dir)
+	return flag != 0 and cell.bars_side(Cell.opposite(flag))
+
+
+func _break_cell(dir: Vector2i, pos: Vector2i) -> void:
 	var cell: Cell = tower.at(pos)
 	if cell == null:
 		return
-	cell.blocked = false
-	cell.kind = Cell.Kind.WALL
-	cell.bars = 0
+	if cell.blocked:
+		cell.blocked = false
+		cell.kind = Cell.Kind.WALL
+	else:
+		var flag := Cell.bar_for(dir)
+		cell.bars &= ~Cell.opposite(flag)
+		var near: Cell = tower.at(player.pos)
+		if near != null:
+			near.bars &= ~flag
+		if cell.bars == 0:
+			cell.kind = Cell.Kind.WALL
 	tower_changed.emit(pos)
 	if player != null and player.loadout != null:
 		player.loadout.break_stillness()

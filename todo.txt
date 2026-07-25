@@ -1,1 +1,6 @@
-windows look weird, should they always be in shadow?
+gargoyles do the open animation when they're activated and the closed on When theyre not? Should I make a still open idle animation and a still closed one for when they are and arnt activated?
+instead of upgrades being from altars, have them be pick ups
+
+credits screen
+
+check the drive for unused assets

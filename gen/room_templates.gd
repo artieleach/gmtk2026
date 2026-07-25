@@ -796,10 +796,10 @@ const WALL_UPPER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+-+.+",
 		],
 		"objects": [
-			".....",
+			"..,..",
 			".....",
 			".....",
 			".....",
@@ -817,7 +817,7 @@ const WALL_UPPER: Array = [
 			"|.........|",
 			"+.+.+.+.+.+",
 			"|.........|",
-			"+.+.+.+.+.+",
+			"+-+.+.+.+-+",
 			"|.........|",
 			"+.+.+.+.+.+",
 			"...........",
@@ -833,12 +833,12 @@ const WALL_UPPER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+.+-+-+.+",
 		],
 		"objects": [
 			".....",
 			".....",
-			".....",
+			",....",
 			".....",
 			".....",
 			".....",
@@ -870,10 +870,10 @@ const WALL_UPPER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+.+.+",
 		],
 		"objects": [
-			".T...",
+			".T,..",
 			".T...",
 			".....",
 			".....",
@@ -891,7 +891,7 @@ const WALL_UPPER: Array = [
 			"....|......",
 			"+.+.+.+.+.+",
 			"....|......",
-			"+.+.+.+.+.+",
+			"+.+.+-+.+.+",
 			"....|......",
 			"+.+.+.+.+.+",
 			"...........",
@@ -907,10 +907,10 @@ const WALL_UPPER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+-+.+",
 		],
 		"objects": [
-			".....",
+			"..,..",
 			".....",
 			"..,..",
 			".....",
@@ -926,7 +926,7 @@ const WALL_UPPER: Array = [
 		"walls": [
 			"+.+.+-+-+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+.+.+.+-+",
 			"..........|",
 			"+.+.+.+.+.+",
 			"...........",
@@ -936,7 +936,7 @@ const WALL_UPPER: Array = [
 			"...........",
 			"+-+-+-+-+-+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+-+.+.+.+.+",
 			"|..........",
 			"+.+.+.+.+.+",
 			"|..........",
@@ -944,11 +944,11 @@ const WALL_UPPER: Array = [
 			"|..........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+.+-+-+.+",
 		],
 		"objects": [
 			".....",
-			".....",
+			"....,",
 			".....",
 			".....",
 			".....",
@@ -981,10 +981,10 @@ const WALL_UPPER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+.+-+.+",
 		],
 		"objects": [
-			".....",
+			"..,..",
 			".....",
 			".....",
 			".....",
@@ -1021,10 +1021,10 @@ const WALL_MIDDLE: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+.+.+-+.+",
 		],
 		"objects": [
-			".....",
+			"..,..",
 			".....",
 			".....",
 			".....",
@@ -1042,7 +1042,7 @@ const WALL_MIDDLE: Array = [
 			"|.........|",
 			"+.+.+.+.+.+",
 			"|.........|",
-			"+.+.+.+.+.+",
+			"+-+.+.+.+-+",
 			"|.........|",
 			"+.+.+.+.+.+",
 			"...........",
@@ -1058,12 +1058,12 @@ const WALL_MIDDLE: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+-+.+",
 		],
 		"objects": [
 			".....",
 			".....",
-			".....",
+			",....",
 			".....",
 			".....",
 			".....",
@@ -1095,10 +1095,10 @@ const WALL_MIDDLE: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+.+.+",
 		],
 		"objects": [
-			".T,..",
+			".T,,.",
 			".T...",
 			".....",
 			".....",
@@ -1116,7 +1116,7 @@ const WALL_MIDDLE: Array = [
 			"....|......",
 			"+.+.+.+.+.+",
 			"....|......",
-			"+.+.+.+.+.+",
+			"+.+.+-+.+.+",
 			"....|......",
 			"+.+.+.+.+.+",
 			"...........",
@@ -1132,10 +1132,10 @@ const WALL_MIDDLE: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+.+-+-+.+",
 		],
 		"objects": [
-			".....",
+			"..,..",
 			".....",
 			"..,..",
 			".....",
@@ -1151,7 +1151,7 @@ const WALL_MIDDLE: Array = [
 		"walls": [
 			"+.+.+-+-+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+.+.+.+-+",
 			"..........|",
 			"+.+.+.+.+.+",
 			"...........",
@@ -1161,7 +1161,7 @@ const WALL_MIDDLE: Array = [
 			"...........",
 			"+-+-+-+-+-+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+-+.+.+.+.+",
 			"|..........",
 			"+.+.+.+.+.+",
 			"|..........",
@@ -1169,11 +1169,11 @@ const WALL_MIDDLE: Array = [
 			"|..........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+-+.+",
 		],
 		"objects": [
 			".....",
-			".....",
+			"....,",
 			".....",
 			".....",
 			".....",
@@ -1206,10 +1206,10 @@ const WALL_MIDDLE: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+.+.+",
 		],
 		"objects": [
-			".....",
+			"..,..",
 			".....",
 			".....",
 			".....",
@@ -1246,10 +1246,10 @@ const WALL_LOWER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+-+.+",
 		],
 		"objects": [
-			".....",
+			",....",
 			".....",
 			".....",
 			".....",
@@ -1267,7 +1267,7 @@ const WALL_LOWER: Array = [
 			"|..........",
 			"+.+.+.+.+.+",
 			"|..........",
-			"+.+.+.+.+.+",
+			"+-+.+.+.+.+",
 			"|..........",
 			"+.+.+.+.+.+",
 			"...........",
@@ -1283,12 +1283,12 @@ const WALL_LOWER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+-+.+",
 		],
 		"objects": [
 			".....",
 			".....",
-			".....",
+			",....",
 			".....",
 			".....",
 			".....",
@@ -1320,10 +1320,10 @@ const WALL_LOWER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+-+.+",
 		],
 		"objects": [
-			".....",
+			",....",
 			".....",
 			".....",
 			".....",
@@ -1341,7 +1341,7 @@ const WALL_LOWER: Array = [
 			"....|......",
 			"+.+.+.+.+.+",
 			"....|......",
-			"+.+.+.+.+.+",
+			"+.+.+-+.+.+",
 			"....|......",
 			"+.+.+.+.+.+",
 			"...........",
@@ -1357,10 +1357,10 @@ const WALL_LOWER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+.+-+-+.+",
 		],
 		"objects": [
-			".....",
+			"..,..",
 			".....",
 			"..,..",
 			".....",
@@ -1394,10 +1394,10 @@ const WALL_LOWER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+.+.+",
 		],
 		"objects": [
-			".....",
+			",....",
 			".....",
 			".....",
 			".....",
@@ -1431,10 +1431,10 @@ const WALL_LOWER: Array = [
 			"...........",
 			"+.+.+.+.+.+",
 			"...........",
-			"+.+.+.+.+.+",
+			"+.+-+-+-+.+",
 		],
 		"objects": [
-			".....",
+			"...,.",
 			".....",
 			".....",
 			".....",
@@ -1519,11 +1519,38 @@ static func validate() -> PackedStringArray:
 				if not _shaped(room, label, problems):
 					continue
 				_validate_windows(room["objects"], label, problems)
+				_validate_layers(room, label, problems)
 				if kind == "route":
 					_validate_route(room, band, label, problems)
 				else:
 					_validate_wall(room, label, problems)
 	return problems
+
+
+static func _validate_layers(room: Dictionary, label: String,
+		problems: PackedStringArray) -> void:
+	var walls: Array = room["walls"]
+	var objects: Array = room["objects"]
+
+	for y in HEIGHT:
+		for x in WIDTH:
+			var spec: Dictionary = OBJECTS.get(glyph_at(objects, x, y), OBJECTS["."])
+			if spec["anchor"] == "altar" and bars_at(walls, x, y) != 0:
+				problems.append("%s: the altar at (%d, %d) stands on a wall, so no upgrade can be seated there"
+					% [label, x, y])
+
+	for y in HEIGHT:
+		var owned_above := 0
+		var owned_below := 0
+		for x in WIDTH:
+			var bars := bars_at(walls, x, y)
+			if bars & Cell.BAR_BOTTOM != 0:
+				owned_above += 1
+			if y + 1 < HEIGHT and bars_at(walls, x, y + 1) & Cell.BAR_TOP != 0:
+				owned_below += 1
+		if owned_above > 0 and owned_below > 0:
+			problems.append("%s: the wall under row %d is spelled from both sides, so it draws as loose stones"
+				% [label, y])
 
 
 static func _shaped(room: Dictionary, label: String, problems: PackedStringArray) -> bool:
@@ -1700,7 +1727,7 @@ static func _validate_route(room: Dictionary, band: int, label: String,
 		var lids := 0
 		for y in HEIGHT:
 			for x in WIDTH:
-				if bars_at(walls, x, y) != Cell.BAR_TOP:
+				if bars_at(walls, x, y) & (Cell.BAR_TOP | Cell.BAR_BOTTOM) == 0:
 					continue
 				for pos in lane:
 					if absi(pos.x - x) <= 1 and absi(pos.y - y) <= 1:
@@ -1792,7 +1819,10 @@ static func caster_stats() -> Dictionary:
 						var bars := bars_at(walls, x, y)
 						if bars != 0:
 							casters += share
-							edges[bars] = edges.get(bars, 0.0) + share
+							for flag in [Cell.BAR_TOP, Cell.BAR_BOTTOM,
+									Cell.BAR_LEFT, Cell.BAR_RIGHT]:
+								if bars & flag != 0:
+									edges[flag] = edges.get(flag, 0.0) + share
 						var spec: Dictionary = OBJECTS.get(glyph_at(objects, x, y), OBJECTS["."])
 						if spec["kind"] == Cell.Kind.WINDOW:
 							windows += share
